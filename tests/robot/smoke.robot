@@ -34,7 +34,8 @@ Categories flow when AUTH_TOKEN set
     ${cid}=    Set Variable    ${r.json()}[id]
     ${r}=    GET On Session    api    /categories/    headers=${headers}
     Status Should Be    200    ${r}
-    Length Should Be    ${r.json()}    minimum=1
+    ${length}=    Get Length    ${r.json()}
+    Should Be True    ${length} >= 1
     ${r}=    GET On Session    api    /categories/${cid}    headers=${headers}
     Status Should Be    200    ${r}
     Should Be Equal    ${r.json()}[name]    Robot Cat
@@ -51,10 +52,61 @@ Hangouts flow when AUTH_TOKEN set
     ${hid}=    Set Variable    ${r.json()}[id]
     ${r}=    GET On Session    api    /hangouts/    headers=${headers}
     Status Should Be    200    ${r}
-    Length Should Be    ${r.json()}    minimum=1
+    ${length}=    Get Length    ${r.json()}
+    Should Be True    ${length} >= 1
     ${r}=    GET On Session    api    /hangouts/${hid}    headers=${headers}
     Status Should Be    200    ${r}
     Should Be Equal    ${r.json()}[name]    Robot Hangout
+
+Subcategories flow when AUTH_TOKEN set
+    ${token}=    Get Environment Variable    AUTH_TOKEN    default=
+    Run Keyword If    '${token}' == ''    Pass Execution    AUTH_TOKEN not set - skipping protected test
+    Create Session    api    ${BASE_URL}
+    ${headers}=    Create Dictionary    Authorization=Bearer ${token}
+    ${cat_body}=    Create Dictionary    name=Robot Parent Cat    is_income=${False}
+    ${r}=    POST On Session    api    /categories/    json=${cat_body}    headers=${headers}
+    Status Should Be    201    ${r}
+    ${cid}=    Set Variable    ${r.json()}[id]
+    ${sub_body}=    Create Dictionary    category_id=${cid}    name=Robot Sub    belongs_to_income=${False}
+    ${r}=    POST On Session    api    /subcategories/    json=${sub_body}    headers=${headers}
+    Status Should Be    201    ${r}
+    Dictionary Should Contain Key    ${r.json()}    id
+    ${sid}=    Set Variable    ${r.json()}[id]
+    ${r}=    GET On Session    api    /subcategories/    headers=${headers}
+    Status Should Be    200    ${r}
+    ${length}=    Get Length    ${r.json()}
+    Should Be True    ${length} >= 1
+    ${r}=    GET On Session    api    /subcategories/${sid}    headers=${headers}
+    Status Should Be    200    ${r}
+    Should Be Equal    ${r.json()}[name]    Robot Sub
+
+Transactions flow when AUTH_TOKEN set
+    ${token}=    Get Environment Variable    AUTH_TOKEN    default=
+    Run Keyword If    '${token}' == ''    Pass Execution    AUTH_TOKEN not set - skipping protected test
+    Create Session    api    ${BASE_URL}
+    ${headers}=    Create Dictionary    Authorization=Bearer ${token}
+    ${cat_body}=    Create Dictionary    name=Robot Tx Cat    is_income=${False}
+    ${r}=    POST On Session    api    /categories/    json=${cat_body}    headers=${headers}
+    Status Should Be    201    ${r}
+    ${cid}=    Set Variable    ${r.json()}[id]
+    ${sub_body}=    Create Dictionary    category_id=${cid}    name=Robot Tx Sub    belongs_to_income=${False}
+    ${r}=    POST On Session    api    /subcategories/    json=${sub_body}    headers=${headers}
+    Status Should Be    201    ${r}
+    ${sid}=    Set Variable    ${r.json()}[id]
+    ${tx_value}=    Evaluate    -100
+    ${tx_body}=    Create Dictionary    subcategory_id=${sid}    value=${tx_value}    description=Robot transaction    date=2025-06-01
+    ${r}=    POST On Session    api    /transactions/    json=${tx_body}    headers=${headers}
+    Status Should Be    201    ${r}
+    Dictionary Should Contain Key    ${r.json()}    id
+    ${tid}=    Set Variable    ${r.json()}[id]
+    ${r}=    GET On Session    api    /transactions/    headers=${headers}
+    Status Should Be    200    ${r}
+    ${length}=    Get Length    ${r.json()}
+    Should Be True    ${length} >= 1
+    ${r}=    GET On Session    api    /transactions/${tid}    headers=${headers}
+    Status Should Be    200    ${r}
+    Should Be Equal    ${r.json()}[description]    Robot transaction
+    Should Be Equal As Integers    ${r.json()}[value]    -100
 
 Protected endpoint without token returns 401
     Create Session    api    ${BASE_URL}
