@@ -224,7 +224,7 @@ All resources are **user-scoped**; `user_id` is set from the Auth0 token and may
 
 | Schema | Fields | Notes |
 |--------|--------|--------|
-| **Read** | id, category_id (uuid), name, description (str \| null), belongs_to_income (bool), user_id (str \| null) | Backend checks category ownership. |
+| **Read** | id, category_name (str), name, description (str \| null), belongs_to_income (bool), user_id (str \| null) | Read responses expose category name, not category_id. |
 | **Create** | category_id (uuid, required), name (required), description (str \| null), belongs_to_income (bool, default false) | user_id from token. |
 | **Update** | category_id, name, description, belongs_to_income (all optional) | PATCH body. |
 
@@ -234,7 +234,7 @@ All resources are **user-scoped**; `user_id` is set from the Auth0 token and may
 
 | Schema | Fields | Notes |
 |--------|--------|--------|
-| **Read** | id, subcategory_id (uuid), value (int), description (str), date (date), hangout_id (uuid \| null), user_id (str \| null) | Links to subcategory and optionally hangout. |
+| **Read** | id, subcategory_name (str), value (int), description (str), date (date), hangout_name (str \| null), user_id (str \| null) | Read responses expose subcategory and hangout names, not IDs. |
 | **Create** | subcategory_id (uuid, required), value (int, required), description (str, required), date (date, required), hangout_id (uuid \| null) | user_id from token. |
 | **Update** | subcategory_id, value, description, date, hangout_id (all optional) | PATCH body. |
 
@@ -424,4 +424,5 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 
 | Date | Change |
 |------|--------|
+| 2026-03-08 | Phase 09: §4.1 Read schemas — SubcategoryRead exposes category_name (not category_id); TransactionRead exposes subcategory_name and hangout_name (not IDs). Create/Update request bodies unchanged. |
 | 2026-03-XX | BE TECHSPEC created: full rewrite for streetrack-be. §1 Problem & Context (API, user scoping, Auth0, CRUD). §2 Tech stack (Python, uv, FastAPI, Ruff, pytest, Robot). §3 Architecture (app structure, conventions, §3.7 API design guidelines). §4 Data & APIs (ORM/schema contracts, storage, endpoint table, auth). §5–§8 NFRs, testing (pytest + Robot), deployment, GSD integration. Gate: `uv run pytest && uv run robot tests/robot && uv run ruff check .`. Aligned with FRAMEWORK.md for bootstrap and phase-driven development from scratch. |
