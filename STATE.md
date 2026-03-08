@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 06 — Transactions CRUD (complete)
+Phase 07 — Hangouts CRUD (complete)
 
 ## Last Task Completed
 
-Phase 06: Transactions CRUD — router, service, schemas (TransactionRead/Create/Update); list/get/create/update/delete scoped by user_id; create/update enforce subcategory and optional hangout ownership (404 when not owned); gate passed; branch merged to main.
+Phase 07: Hangouts CRUD — router, service, schemas (HangoutRead/Create/Update); list/get/create/update/delete scoped by user_id; 404 when not owned; gate passed; branch merged to main.
 
 ## Next Task
 
-Phase 07 — Hangouts CRUD: CRUD scoped by user_id. Create branch feature/phase-07-hangouts-crud, write phase-07-SPEC.md, implement per §4.1, §4.3.
+Phase 08 — Tests & verification: Pytest + Robot, coverage gate, §1.3 mapping table, DoD.
 
 ## Key Decisions
 
