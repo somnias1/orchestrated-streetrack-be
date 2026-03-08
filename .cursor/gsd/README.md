@@ -53,7 +53,7 @@ GSD session start — Phase NN (bugfix: <short description>).
 
 - **Phase NN**: Use the phase number that owns the affected code (from ROADMAP), or the next phase number if the bug spans multiple areas.
 - **SPEC**: Create and commit a spec (e.g. `.planning/phase-NN-SPEC-BUGFIX-<slug>.md`) that describes: **bug** (observed vs expected), **root cause** (if known), **fix approach**. Commit the SPEC before implementation.
-- **Tests**: Include or update tests that reproduce the bug before the fix (red → green). Same gate (`npm test && npx biome check .`), same SUMMARY, same merge.
+- **Tests**: Include or update tests that reproduce the bug before the fix (red → green). Same gate (`uv run pytest && uv run robot tests/robot && uv run ruff check .`), same SUMMARY, same merge.
 - **Branch**: `feature/phase-NN-bugfix-<slug>`; for critical hotfixes use `hotfix/phase-NN-<slug>` but still SPEC first and SUMMARY before merge.
 
 The same **phase.md** subagent handles bugfix sessions: it reads ROADMAP + TECHSPEC and runs the workflow; the SPEC content is bug-focused instead of feature scope.
@@ -62,7 +62,7 @@ The same **phase.md** subagent handles bugfix sessions: it reads ROADMAP + TECHS
 
 ## Example: different project, different phases
 
-- **Project A** (this repo): ROADMAP has 01 Foundation, 02 Data+Store, 03 Services+MSW, 04 Orchestration+UI, 05 Manual Analysis, 06 Tests. User says "GSD session start — Phase 03" → subagent runs with phase.md, reads ROADMAP, sees Phase 03 = "Services + Mocking" and the listed TECHSPEC sections, and executes that.
+- **Project A** (this repo): ROADMAP has 01 Foundation, 02 Data model + migrations, 03 Auth, 04–07 CRUD, 08 Tests. User says "GSD session start — Phase 03" → subagent runs with phase.md, reads ROADMAP, sees Phase 03 = "Auth" and the listed TECHSPEC sections, and executes that.
 - **Project B**: ROADMAP has 01 Setup, 02 API layer, 03 Screens, 04 Tests. User says "GSD session start — Phase 02" → same phase.md, subagent reads Project B's ROADMAP and TECHSPEC and runs Phase 02 for that project.
 
 ---
