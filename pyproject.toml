@@ -1,0 +1,55 @@
+[project]
+name = "orchestrated-streetrack-be"
+version = "0.1.0"
+description = "Streetrack backend — FastAPI, PostgreSQL, Auth0"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi[standard]==0.129.0",
+    "pydantic-settings==2.6.1",
+    "sqlalchemy==2.0.36",
+    "alembic==1.14.0",
+    "python-jose[cryptography]==3.3.0",
+    "requests==2.32.3",
+    "psycopg2-binary==2.9.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "pytest-cov==6.0.0",
+    "httpx==0.27.2",
+    "robotframework==7.0.1",
+    "robotframework-requests==0.9.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.4",
+    "pytest-cov==6.0.0",
+    "httpx==0.27.2",
+    "robotframework==7.0.1",
+    "robotframework-requests==0.9.6",
+    "ruff==0.8.4",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 80

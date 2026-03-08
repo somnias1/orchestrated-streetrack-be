@@ -1,0 +1,22 @@
+# Environment and secrets
+.env
+.venv/
+venv/
+
+# Build and cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Robot Framework
+output.xml
+log.html
+report.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
