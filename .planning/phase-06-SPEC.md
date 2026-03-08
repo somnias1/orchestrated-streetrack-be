@@ -9,7 +9,7 @@
 ## Scope
 
 1. **Schemas (§4.1)**  
-   - **TransactionRead**: id, subcategory_id (uuid), value (int), description (str), date (date), hangout_id (uuid | null), user_id (str | null).  
+   - **TransactionRead**: id, subcategory_name (str), value (int), description (str), date (date), hangout_name (str | null), user_id (str | null).  
    - **TransactionCreate**: subcategory_id (uuid, required), value (int, required), description (str, required), date (date, required), hangout_id (uuid | null).  
    - **TransactionUpdate**: subcategory_id, value, description, date, hangout_id (all optional).
 
@@ -40,5 +40,6 @@
 ## Definition of done (Phase 06)
 
 - [ ] Schemas TransactionRead, TransactionCreate, TransactionUpdate in `app/schemas/transaction.py` and exported from `app/schemas/__init__.py`.  
+- [ ] TransactionRead exposes subcategory_name and hangout_name (not subcategory_id, hangout_id) in list/get/create/update responses.  
 - [ ] Service with subcategory (and optional hangout) ownership check on create/update; 404 when not found or not owned.  
 - [ ] Router with all five endpoints; gate passes before every commit.

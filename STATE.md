@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 08 — Tests & verification (complete)
+Phase 09 — Read responses: names not IDs (ready to execute)
 
 ## Last Task Completed
 
@@ -10,7 +10,7 @@ Phase 08: Pytest unit (auth, category, subcategory, transaction, hangout service
 
 ## Next Task
 
-Phase 09+ (new features per BACKLOG / FRAMEWORK.md §6).
+Phase 09: Implement read responses with names not IDs — SubcategoryRead returns category_name (not category_id); TransactionRead returns subcategory_name and hangout_name (not subcategory_id, hangout_id). Update schemas, services (eager-load relations, build read DTOs with names), and tests. See .planning/phase-09-SPEC.md. Branch feature/phase-09-read-names-not-ids; gate before every commit.
 
 ## Key Decisions
 

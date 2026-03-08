@@ -9,7 +9,7 @@
 ## Scope
 
 1. **Schemas (§4.1)**  
-   - **SubcategoryRead**: id, category_id (uuid), name, description (str | null), belongs_to_income (bool), user_id (str | null).  
+   - **SubcategoryRead**: id, category_name (str), name, description (str | null), belongs_to_income (bool), user_id (str | null).  
    - **SubcategoryCreate**: category_id (uuid, required), name (required), description (str | null), belongs_to_income (bool, default false).  
    - **SubcategoryUpdate**: category_id, name, description, belongs_to_income (all optional).
 
@@ -41,5 +41,6 @@
 ## Definition of done (Phase 05)
 
 - [ ] Schemas SubcategoryRead, SubcategoryCreate, SubcategoryUpdate in `app/schemas/subcategory.py` and exported from `app/schemas/__init__.py`.  
+- [ ] SubcategoryRead exposes category_name (not category_id) in list/get/create/update responses.  
 - [ ] Service with category ownership check on create/update; 404 when category not found or not owned.  
 - [ ] Router with all five endpoints; gate passes before every commit.
