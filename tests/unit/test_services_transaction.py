@@ -158,12 +158,14 @@ def test_create_transaction_success(db_session: Session) -> None:
     )
     assert result.value == -50
     assert result.description == "Coffee"
+    assert result.subcategory_id == sub.id
     assert result.subcategory_name == "Sub"
+    assert result.hangout_id is None
     assert result.hangout_name is None
 
 
 def test_create_transaction_with_hangout_returns_hangout_name(db_session: Session) -> None:
-    """Read response includes hangout_name when transaction is linked to a hangout."""
+    """Read response includes hangout_id and hangout_name when linked to a hangout."""
     cat = _make_category(db_session, "user-1")
     sub = _make_subcategory(db_session, "user-1", cat.id)
     hang = _make_hangout(db_session, "user-1")
@@ -178,7 +180,9 @@ def test_create_transaction_with_hangout_returns_hangout_name(db_session: Sessio
             hangout_id=hang.id,
         ),
     )
+    assert result.subcategory_id == sub.id
     assert result.subcategory_name == "Sub"
+    assert result.hangout_id == hang.id
     assert result.hangout_name == "Hangout"
 
 

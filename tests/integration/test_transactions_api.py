@@ -56,12 +56,10 @@ def test_transactions_flow(
     assert r.status_code == 201
     data = r.json()
     tx_id = data["id"]
-    assert "subcategory_name" in data
+    assert data["subcategory_id"] == subcategory_id
     assert data["subcategory_name"] == "Sub"
-    assert "hangout_name" in data
+    assert data["hangout_id"] is None
     assert data["hangout_name"] is None
-    assert "subcategory_id" not in data
-    assert "hangout_id" not in data
 
     r = client.get("/transactions/", headers=headers)
     assert r.status_code == 200
@@ -71,10 +69,10 @@ def test_transactions_flow(
     assert r.status_code == 200
     get_data = r.json()
     assert get_data["value"] == -1000
-    assert get_data.get("subcategory_name") == "Sub"
-    assert get_data.get("hangout_name") is None
-    assert "subcategory_id" not in get_data
-    assert "hangout_id" not in get_data
+    assert get_data["subcategory_id"] == subcategory_id
+    assert get_data["subcategory_name"] == "Sub"
+    assert get_data["hangout_id"] is None
+    assert get_data["hangout_name"] is None
 
     r = client.patch(
         f"/transactions/{tx_id}",
