@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 09 — Read responses: names not IDs (ready to execute)
+Phase 09 — Read responses: names not IDs (complete)
 
 ## Last Task Completed
 
-Phase 08: Pytest unit (auth, category, subcategory, transaction, hangout services) and integration (one flow per resource, 401, 404, 422); Robot smoke + categories/hangouts flow; conftest (get_db/auth overrides); §1.3 mapping table in TECHSPEC; coverage ≥80%; phase branch merged to main.
+Phase 09: SubcategoryRead returns category_name; TransactionRead returns subcategory_name and hangout_name. Schemas, services (eager-load + _row_to_read), unit and integration tests updated; TECHSPEC §4.1 and phase-05/06 DoD docs updated. Gate passed; branch feature/phase-09-read-names-not-ids ready to merge.
 
 ## Next Task
 
-Phase 09: Implement read responses with names not IDs — SubcategoryRead returns category_name (not category_id); TransactionRead returns subcategory_name and hangout_name (not subcategory_id, hangout_id). Update schemas, services (eager-load relations, build read DTOs with names), and tests. See .planning/phase-09-SPEC.md. Branch feature/phase-09-read-names-not-ids; gate before every commit.
+Phase 10+ (see .planning/phase-00-ROADMAP.md and BACKLOG.md for future work).
 
 ## Key Decisions
 
