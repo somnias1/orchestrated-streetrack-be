@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.base import get_engine
 from app.db.config import Settings
+from app.routers.category import router as category_router
 
 
 @asynccontextmanager
@@ -35,3 +36,6 @@ def root() -> dict[str, str]:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+app.include_router(category_router)
