@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 from datetime import date
 from typing import TYPE_CHECKING
@@ -19,10 +21,10 @@ class Hangout(Base):
         PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    description = mapped_column(String(1024), nullable=True)
     date: Mapped[date] = mapped_column(Date, nullable=False)
-    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    user_id = mapped_column(String(255), nullable=True, index=True)
 
-    transactions: Mapped[list["Transaction"]] = relationship(
+    transactions: Mapped[list["Transaction"]] = relationship(  # noqa: UP037
         "Transaction", back_populates="hangout"
     )

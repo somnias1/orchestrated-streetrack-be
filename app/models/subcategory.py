@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 from typing import TYPE_CHECKING
 
@@ -24,12 +26,12 @@ class Subcategory(Base):
         nullable=False,
         index=True,
     )
-    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    user_id = mapped_column(String(255), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    description = mapped_column(String(1024), nullable=True)
     belongs_to_income: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    category: Mapped["Category"] = relationship("Category", back_populates="subcategories")
-    transactions: Mapped[list["Transaction"]] = relationship(
+    category: Mapped["Category"] = relationship("Category", back_populates="subcategories")  # noqa: UP037
+    transactions: Mapped[list["Transaction"]] = relationship(  # noqa: UP037
         "Transaction", back_populates="subcategory", cascade="all, delete-orphan"
     )
