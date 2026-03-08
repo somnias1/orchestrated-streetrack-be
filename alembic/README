@@ -1,1 +1,8 @@
-Generic single-database configuration.
+# Alembic migrations
+
+- **Apply:** `uv run alembic upgrade head` (requires `DATABASE_URL` in `.env`).
+- **Create (autogenerate):** After changing ORM models in `app/models/`, run:
+  `uv run alembic revision --autogenerate -m "short description"`.
+  Review the new file in `alembic/versions/`, then apply with `upgrade head`.
+
+See the project **README.md** for full migration and run instructions.

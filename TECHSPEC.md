@@ -259,7 +259,7 @@ All resources are **user-scoped**; `user_id` is set from the Auth0 token and may
 | Concern | Choice | Notes |
 |---------|--------|-------|
 | **Database** | PostgreSQL | Via SQLAlchemy 2. |
-| **Migrations** | Alembic | Schema versioning. |
+| **Migrations** | Alembic | Schema versioning. Create revisions with **autogenerate**: `uv run alembic revision --autogenerate -m "description"`. Apply with `uv run alembic upgrade head`. |
 | **Session** | Per request (get_db) | No global session; no in-memory cache requirement for v1. |
 
 ### 4.3 APIs & Contracts (backend implements)
@@ -370,7 +370,8 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 
 - **Run (dev)**: `uv run uvicorn app.main:app --reload`.
 - **Run (prod)**: `uv run uvicorn app.main:app`.
-- **Migrations**: `uv run alembic upgrade head`.
+- **Migrations (apply)**: `uv run alembic upgrade head`. Requires `DATABASE_URL`.
+- **Migrations (create)**: After model changes, `uv run alembic revision --autogenerate -m "description"`; review and apply. See README.
 - No frontend-style “build”; this is API-only.
 
 ### 7.3 Environment Variables & Secrets

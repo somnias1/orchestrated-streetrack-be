@@ -26,6 +26,7 @@ All in `app/models/`; UUID primary keys; `user_id` (str, nullable) on all four. 
 - Initialize Alembic at repo root: `alembic.ini`, `alembic/` with env.py and script.py.mako.
 - Configure `alembic.ini` and `alembic/env.py` to use `app.db.base.Base.metadata` and `app.db.config.Settings().database_url` (no hardcoded URLs).
 - **Initial migration:** one revision that creates tables `categories`, `subcategories`, `transactions`, `hangouts` with the columns and FKs above.
+- **Creating future migrations:** use **autogenerate**. After changing ORM models, run `uv run alembic revision --autogenerate -m "description"` (requires `DATABASE_URL` and a running DB). Review the generated script in `alembic/versions/`, then apply with `uv run alembic upgrade head`. See README.
 
 ### 3. Out of scope this phase
 
@@ -39,7 +40,7 @@ All in `app/models/`; UUID primary keys; `user_id` (str, nullable) on all four. 
 
 1. **feat(02): add phase-02 spec** — this spec committed on the phase branch.
 2. **feat(02): add ORM models Category, Subcategory, Transaction, Hangout** — implement in `app/models/`, wire to Base.
-3. **chore(02): add Alembic and initial migration** — alembic init, config from app.db, first migration creating all four tables.
+3. **chore(02): add Alembic and initial migration** — alembic init, config from app.db, first migration creating all four tables. New migrations thereafter: create via `alembic revision --autogenerate`, apply via `alembic upgrade head`.
 
 ---
 
