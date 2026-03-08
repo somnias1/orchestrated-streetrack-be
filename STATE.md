@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 03 — Auth (complete)
+Phase 04 — Categories CRUD (complete)
 
 ## Last Task Completed
 
-Phase 03: Auth0 JWT validation, get_current_user_id, CurrentUserId. Spec committed; branch feature/phase-03-auth; app/auth.py implemented; unit tests for valid/invalid/missing token; gate passed.
+Phase 04: Categories CRUD — router, service, schemas (CategoryRead/Create/Update); list/get/create/update/delete scoped by user_id; 404 when not owned; gate passed; branch merged to main.
 
 ## Next Task
 
-Phase 04 — Categories CRUD: Router, service, schemas, list/get/create/update/delete. Create branch feature/phase-04-categories-crud, write phase-04-SPEC.md, implement per §3.2, §4.1, §4.3.
+Phase 05 — Subcategories CRUD: CRUD + category ownership checks. Create branch feature/phase-05-subcategories-crud, write phase-05-SPEC.md, implement per §4.1, §4.3.
 
 ## Key Decisions
 
