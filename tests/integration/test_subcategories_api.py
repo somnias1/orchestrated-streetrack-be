@@ -43,6 +43,9 @@ def test_subcategories_flow(
     assert r.status_code == 201
     data = r.json()
     sub_id = data["id"]
+    assert "category_name" in data
+    assert data["category_name"] == "Parent"
+    assert "category_id" not in data
 
     r = client.get("/subcategories/", headers=headers)
     assert r.status_code == 200
@@ -50,7 +53,10 @@ def test_subcategories_flow(
 
     r = client.get(f"/subcategories/{sub_id}", headers=headers)
     assert r.status_code == 200
-    assert r.json()["name"] == "Lunch"
+    get_data = r.json()
+    assert get_data["name"] == "Lunch"
+    assert get_data.get("category_name") == "Parent"
+    assert "category_id" not in get_data
 
     r = client.patch(
         f"/subcategories/{sub_id}",
