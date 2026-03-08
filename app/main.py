@@ -7,6 +7,7 @@ from app.db.base import get_engine
 from app.db.config import Settings
 from app.routers.category import router as category_router
 from app.routers.subcategory import router as subcategory_router
+from app.routers.transaction import router as transaction_router
 
 
 @asynccontextmanager
@@ -41,3 +42,4 @@ def health() -> dict[str, str]:
 
 app.include_router(category_router)
 app.include_router(subcategory_router)
+app.include_router(transaction_router)
