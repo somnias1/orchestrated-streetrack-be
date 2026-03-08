@@ -6,12 +6,25 @@ import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.hangout import Hangout
 from app.models.subcategory import Subcategory
 from app.models.transaction import Transaction
 from app.schemas.transaction import TransactionCreate, TransactionRead, TransactionUpdate
+
+
+def _row_to_read(row: Transaction) -> TransactionRead:
+    """Build TransactionRead with subcategory_name and hangout_name from relationships."""
+    return TransactionRead(
+        id=row.id,
+        subcategory_name=row.subcategory.name if row.subcategory else "",
+        value=row.value,
+        description=row.description,
+        date=row.date,
+        hangout_name=row.hangout.name if row.hangout else None,
+        user_id=row.user_id,
+    )
 
 
 def list_transactions(
@@ -24,25 +37,37 @@ def list_transactions(
     stmt = (
         select(Transaction)
         .where(Transaction.user_id == user_id)
+        .options(
+            joinedload(Transaction.subcategory),
+            joinedload(Transaction.hangout),
+        )
         .order_by(Transaction.date.desc())
         .offset(skip)
         .limit(limit)
     )
-    rows = db.execute(stmt).scalars().all()
-    return [TransactionRead.model_validate(r) for r in rows]
+    rows = db.execute(stmt).unique().scalars().all()
+    return [_row_to_read(r) for r in rows]
 
 
 def get_transaction(
     db: Session, user_id: str, transaction_id: uuid.UUID
 ) -> TransactionRead:
     """Return transaction if found and owned; else 404."""
-    row = db.get(Transaction, transaction_id)
+    stmt = (
+        select(Transaction)
+        .where(Transaction.id == transaction_id)
+        .options(
+            joinedload(Transaction.subcategory),
+            joinedload(Transaction.hangout),
+        )
+    )
+    row = db.execute(stmt).unique().scalars().first()
     if row is None or row.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Transaction not found",
         )
-    return TransactionRead.model_validate(row)
+    return _row_to_read(row)
 
 
 def _ensure_subcategory_owned(
@@ -85,7 +110,7 @@ def create_transaction(
     db.add(row)
     db.commit()
     db.refresh(row)
-    return TransactionRead.model_validate(row)
+    return _row_to_read(row)
 
 
 def update_transaction(
@@ -115,7 +140,7 @@ def update_transaction(
         row.hangout_id = body.hangout_id
     db.commit()
     db.refresh(row)
-    return TransactionRead.model_validate(row)
+    return _row_to_read(row)
 
 
 def delete_transaction(

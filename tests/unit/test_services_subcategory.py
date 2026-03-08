@@ -45,8 +45,8 @@ def test_list_subcategories_scoped(db_session: Session) -> None:
     )
     list_a = subcategory_service.list_subcategories(db_session, "user-a")
     list_b = subcategory_service.list_subcategories(db_session, "user-b")
-    assert len(list_a) == 1 and list_a[0].name == "SubA"
-    assert len(list_b) == 1 and list_b[0].name == "SubB"
+    assert len(list_a) == 1 and list_a[0].name == "SubA" and list_a[0].category_name == "CatA"
+    assert len(list_b) == 1 and list_b[0].name == "SubB" and list_b[0].category_name == "CatB"
 
 
 def test_get_subcategory_found(db_session: Session) -> None:
@@ -101,7 +101,7 @@ def test_create_subcategory_success(db_session: Session) -> None:
         ),
     )
     assert result.name == "Lunch"
-    assert result.category_id == cat.id
+    assert result.category_name == "Cat"
     assert result.belongs_to_income is True
 
 

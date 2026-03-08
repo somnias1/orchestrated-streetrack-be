@@ -78,8 +78,8 @@ def test_list_transactions_scoped(db_session: Session) -> None:
     )
     list_a = transaction_service.list_transactions(db_session, "user-a")
     list_b = transaction_service.list_transactions(db_session, "user-b")
-    assert len(list_a) == 1 and list_a[0].value == 100
-    assert len(list_b) == 1 and list_b[0].value == 200
+    assert len(list_a) == 1 and list_a[0].value == 100 and list_a[0].subcategory_name == "Sub"
+    assert len(list_b) == 1 and list_b[0].value == 200 and list_b[0].subcategory_name == "Sub"
 
 
 def test_get_transaction_404_when_not_owned(db_session: Session) -> None:
@@ -158,7 +158,28 @@ def test_create_transaction_success(db_session: Session) -> None:
     )
     assert result.value == -50
     assert result.description == "Coffee"
-    assert result.subcategory_id == sub.id
+    assert result.subcategory_name == "Sub"
+    assert result.hangout_name is None
+
+
+def test_create_transaction_with_hangout_returns_hangout_name(db_session: Session) -> None:
+    """Read response includes hangout_name when transaction is linked to a hangout."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    hang = _make_hangout(db_session, "user-1")
+    result = transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=10,
+            description="Outing",
+            date=date(2025, 2, 1),
+            hangout_id=hang.id,
+        ),
+    )
+    assert result.subcategory_name == "Sub"
+    assert result.hangout_name == "Hangout"
 
 
 def test_update_transaction_404_when_not_owned(db_session: Session) -> None:

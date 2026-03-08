@@ -40,7 +40,7 @@
 
 ## Definition of done (Phase 05)
 
-- [ ] Schemas SubcategoryRead, SubcategoryCreate, SubcategoryUpdate in `app/schemas/subcategory.py` and exported from `app/schemas/__init__.py`.  
-- [ ] SubcategoryRead exposes category_name (not category_id) in list/get/create/update responses.  
-- [ ] Service with category ownership check on create/update; 404 when category not found or not owned.  
-- [ ] Router with all five endpoints; gate passes before every commit.
+- [x] Schemas SubcategoryRead, SubcategoryCreate, SubcategoryUpdate in `app/schemas/subcategory.py` and exported from `app/schemas/__init__.py`.  
+- [x] SubcategoryRead exposes category_name (not category_id) in list/get/create/update responses (implemented in Phase 09).  
+- [x] Service with category ownership check on create/update; 404 when category not found or not owned.  
+- [x] Router with all five endpoints; gate passes before every commit.

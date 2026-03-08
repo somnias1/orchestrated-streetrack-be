@@ -39,7 +39,7 @@
 
 ## Definition of done (Phase 06)
 
-- [ ] Schemas TransactionRead, TransactionCreate, TransactionUpdate in `app/schemas/transaction.py` and exported from `app/schemas/__init__.py`.  
-- [ ] TransactionRead exposes subcategory_name and hangout_name (not subcategory_id, hangout_id) in list/get/create/update responses.  
-- [ ] Service with subcategory (and optional hangout) ownership check on create/update; 404 when not found or not owned.  
-- [ ] Router with all five endpoints; gate passes before every commit.
+- [x] Schemas TransactionRead, TransactionCreate, TransactionUpdate in `app/schemas/transaction.py` and exported from `app/schemas/__init__.py`.  
+- [x] TransactionRead exposes subcategory_name and hangout_name (not subcategory_id, hangout_id) in list/get/create/update responses (implemented in Phase 09).  
+- [x] Service with subcategory (and optional hangout) ownership check on create/update; 404 when not found or not owned.  
+- [x] Router with all five endpoints; gate passes before every commit.
