@@ -14,13 +14,14 @@ from app.schemas.subcategory import SubcategoryCreate, SubcategoryRead, Subcateg
 
 
 def _row_to_read(row: Subcategory) -> SubcategoryRead:
-    """Build SubcategoryRead with category_name from eager-loaded or lazy-loaded category."""
+    """Build SubcategoryRead with category_id and category_name from row/relationship."""
     return SubcategoryRead(
         id=row.id,
         name=row.name,
         description=row.description,
         belongs_to_income=row.belongs_to_income,
         user_id=row.user_id,
+        category_id=row.category_id,
         category_name=row.category.name if row.category else "",
     )
 

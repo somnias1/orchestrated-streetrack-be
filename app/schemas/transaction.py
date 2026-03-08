@@ -27,14 +27,16 @@ class TransactionUpdate(BaseModel):
 
 
 class TransactionRead(BaseModel):
-    """Response for list, get, create, update. Exposes subcategory_name and hangout_name."""
+    """Response for list, get, create, update. Exposes ids and names (FE uses ids for lookups)."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    subcategory_id: uuid.UUID
     subcategory_name: str
     value: int
     description: str
     date: date_type
+    hangout_id: uuid.UUID | None = None
     hangout_name: str | None = None
     user_id: str | None = None
