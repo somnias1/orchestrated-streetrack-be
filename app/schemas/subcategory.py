@@ -27,10 +27,10 @@ class SubcategoryUpdate(BaseModel):
 
 
 class SubcategoryRead(SubcategoryBase):
-    """Response for list, get, create, update."""
+    """Response for list, get, create, update. Exposes category_name (not category_id)."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    category_id: uuid.UUID
+    category_name: str
     user_id: str | None = None

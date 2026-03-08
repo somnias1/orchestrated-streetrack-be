@@ -6,11 +6,23 @@ import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.category import Category
 from app.models.subcategory import Subcategory
 from app.schemas.subcategory import SubcategoryCreate, SubcategoryRead, SubcategoryUpdate
+
+
+def _row_to_read(row: Subcategory) -> SubcategoryRead:
+    """Build SubcategoryRead with category_name from eager-loaded or lazy-loaded category."""
+    return SubcategoryRead(
+        id=row.id,
+        name=row.name,
+        description=row.description,
+        belongs_to_income=row.belongs_to_income,
+        user_id=row.user_id,
+        category_name=row.category.name if row.category else "",
+    )
 
 
 def list_subcategories(
@@ -23,23 +35,29 @@ def list_subcategories(
     stmt = (
         select(Subcategory)
         .where(Subcategory.user_id == user_id)
+        .options(joinedload(Subcategory.category))
         .order_by(Subcategory.name)
         .offset(skip)
         .limit(limit)
     )
     rows = db.execute(stmt).scalars().all()
-    return [SubcategoryRead.model_validate(r) for r in rows]
+    return [_row_to_read(r) for r in rows]
 
 
 def get_subcategory(db: Session, user_id: str, subcategory_id: uuid.UUID) -> SubcategoryRead:
     """Return subcategory if found and owned; else 404."""
-    row = db.get(Subcategory, subcategory_id)
+    stmt = (
+        select(Subcategory)
+        .where(Subcategory.id == subcategory_id)
+        .options(joinedload(Subcategory.category))
+    )
+    row = db.execute(stmt).unique().scalars().first()
     if row is None or row.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subcategory not found",
         )
-    return SubcategoryRead.model_validate(row)
+    return _row_to_read(row)
 
 
 def _ensure_category_owned(db: Session, user_id: str, category_id: uuid.UUID) -> None:
@@ -65,7 +83,7 @@ def create_subcategory(db: Session, user_id: str, body: SubcategoryCreate) -> Su
     db.add(row)
     db.commit()
     db.refresh(row)
-    return SubcategoryRead.model_validate(row)
+    return _row_to_read(row)
 
 
 def update_subcategory(
@@ -92,7 +110,7 @@ def update_subcategory(
         row.belongs_to_income = body.belongs_to_income
     db.commit()
     db.refresh(row)
-    return SubcategoryRead.model_validate(row)
+    return _row_to_read(row)
 
 
 def delete_subcategory(db: Session, user_id: str, subcategory_id: uuid.UUID) -> None:
