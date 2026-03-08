@@ -11,4 +11,8 @@ class Settings(BaseSettings):
     auth0_issuer: str = ""
 
     def cors_origins_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+        return [
+            host if host.startswith(("http://", "https://")) else f"https://{host}"
+            for host in self.cors_allowed_origins.split(",")
+            if host.strip()
+        ]
