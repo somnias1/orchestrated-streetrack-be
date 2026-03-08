@@ -1,7 +1,7 @@
 # Phase 09 — Read responses: names not IDs (Summary)
 
 **Branch:** feature/phase-09-read-names-not-ids  
-**Merged:** (pending)
+**Merged:** yes (main)
 
 ---
 
