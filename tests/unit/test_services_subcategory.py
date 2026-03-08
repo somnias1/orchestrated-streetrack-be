@@ -101,6 +101,7 @@ def test_create_subcategory_success(db_session: Session) -> None:
         ),
     )
     assert result.name == "Lunch"
+    assert result.category_id == cat.id
     assert result.category_name == "Cat"
     assert result.belongs_to_income is True
 

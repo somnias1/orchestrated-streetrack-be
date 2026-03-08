@@ -15,13 +15,15 @@ from app.schemas.transaction import TransactionCreate, TransactionRead, Transact
 
 
 def _row_to_read(row: Transaction) -> TransactionRead:
-    """Build TransactionRead with subcategory_name and hangout_name from relationships."""
+    """Build TransactionRead with ids and names from row/relationships."""
     return TransactionRead(
         id=row.id,
+        subcategory_id=row.subcategory_id,
         subcategory_name=row.subcategory.name if row.subcategory else "",
         value=row.value,
         description=row.description,
         date=row.date,
+        hangout_id=row.hangout_id,
         hangout_name=row.hangout.name if row.hangout else None,
         user_id=row.user_id,
     )

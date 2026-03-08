@@ -7,11 +7,11 @@
 
 ## Done
 
-- **SubcategoryRead**: Replaced `category_id` with `category_name` (str). Subcategory service uses `joinedload(Subcategory.category)` for list/get and builds read DTOs via `_row_to_read(row)` with `category_name=row.category.name`.
-- **TransactionRead**: Replaced `subcategory_id` and `hangout_id` with `subcategory_name` (str) and `hangout_name` (str | None). Transaction service uses `joinedload(Transaction.subcategory)` and `joinedload(Transaction.hangout)` and builds read DTOs with names.
-- **Schemas**: `app/schemas/subcategory.py`, `app/schemas/transaction.py` updated; Create/Update unchanged.
-- **Tests**: Unit tests assert `category_name`, `subcategory_name`, `hangout_name`; integration tests expect these fields and no IDs in read responses. Added `test_create_transaction_with_hangout_returns_hangout_name`.
-- **Documentation**: TECHSPEC §4.1 updated (Subcategory and Transaction Read rows); phase-05-SPEC and phase-06-SPEC DoD marked complete with note "implemented in Phase 09"; TECHSPEC changelog entry added.
+- **SubcategoryRead**: Exposes `category_id` (uuid) and `category_name` (str). Subcategory service uses `joinedload(Subcategory.category)` and `_row_to_read(row)` with both ids and names (FE uses id for parent-list lookups).
+- **TransactionRead**: Exposes `subcategory_id`, `subcategory_name`, `hangout_id`, `hangout_name`. Transaction service builds read DTOs with ids and names from row/relationships.
+- **Schemas**: `app/schemas/subcategory.py`, `app/schemas/transaction.py`; Create/Update unchanged.
+- **Tests**: Unit and integration assert/expect both ids and names in read responses.
+- **Documentation**: TECHSPEC §4.1 and phase-09-SPEC updated; phase-05/06 DoD and TECHSPEC changelog aligned.
 
 ## Gate
 
