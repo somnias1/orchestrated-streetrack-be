@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 02 — Data model + migrations (complete)
+Phase 03 — Auth (complete)
 
 ## Last Task Completed
 
-Phase 02: ORM models (Category, Subcategory, Transaction, Hangout), Alembic init, initial migration. Spec committed first; branch feature/phase-02-data-model; gate passed.
+Phase 03: Auth0 JWT validation, get_current_user_id, CurrentUserId. Spec committed; branch feature/phase-03-auth; app/auth.py implemented; unit tests for valid/invalid/missing token; gate passed.
 
 ## Next Task
 
-Phase 03 — Auth: Auth0 JWT validation, get_current_user_id, CurrentUserId. Create branch feature/phase-03-auth, write phase-03-SPEC.md, implement per §3.1, §4.4.
+Phase 04 — Categories CRUD: Router, service, schemas, list/get/create/update/delete. Create branch feature/phase-04-categories-crud, write phase-04-SPEC.md, implement per §3.2, §4.1, §4.3.
 
 ## Key Decisions
 
