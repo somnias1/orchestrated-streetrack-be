@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 04 — Categories CRUD (complete)
+Phase 05 — Subcategories CRUD (complete)
 
 ## Last Task Completed
 
-Phase 04: Categories CRUD — router, service, schemas (CategoryRead/Create/Update); list/get/create/update/delete scoped by user_id; 404 when not owned; gate passed; branch merged to main.
+Phase 05: Subcategories CRUD — router, service, schemas (SubcategoryRead/Create/Update); list/get/create/update/delete scoped by user_id; create/update enforce category ownership (404 when category not owned); gate passed; branch merged to main.
 
 ## Next Task
 
-Phase 05 — Subcategories CRUD: CRUD + category ownership checks. Create branch feature/phase-05-subcategories-crud, write phase-05-SPEC.md, implement per §4.1, §4.3.
+Phase 06 — Transactions CRUD: CRUD + subcategory and optional hangout ownership. Create branch feature/phase-06-transactions-crud, write phase-06-SPEC.md, implement per §4.1, §4.3.
 
 ## Key Decisions
 
