@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 01 — Foundation (in progress)
+Phase 01 — Foundation (complete)
 
 ## Last Task Completed
 
-None. Starting fresh.
+Phase 01: Project scaffold, deps (uv, exact pins), .gitattributes, app structure (main, db, auth stub, empty models/schemas/services/routers), minimal pytest + Robot for gate. GSD files aligned to Python/FastAPI/uv/Ruff.
 
 ## Next Task
 
-Create branch feature/phase-01-foundation. Install deps per TECHSPEC §2.2, set up tooling (uv, Ruff), scaffold app structure per §3.2, add .gitattributes per §2.3.
+Phase 02 — Data model + migrations: ORM models (Category, Subcategory, Transaction, Hangout), Alembic, initial migration. Create branch feature/phase-02-data-model, write phase-02-SPEC.md, implement per §4.1, §4.2.
 
 ## Key Decisions
 

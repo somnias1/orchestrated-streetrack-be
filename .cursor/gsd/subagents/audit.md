@@ -24,11 +24,11 @@ Read TECHSPEC.md and compare the project to it. Perform the following checks and
 
 2. **§8.3 Definition of Done** — For each bullet in §8.3, state MET or NOT MET and give one-line evidence (e.g. file path, commit, or "missing: ...").
 
-3. **Phases 01–06** — Compare STATE.md phase status with actual code and .planning/ SUMMARYs. List each phase and whether it appears complete (spec + summary + merged branch).
+3. **Phases (from ROADMAP)** — Compare STATE.md phase status with actual code and .planning/ SUMMARYs. List each phase from .planning/phase-00-ROADMAP.md and whether it appears complete (spec + summary + merged branch).
 
 4. **README** — Confirm README exists and addresses §1.5 and §8.3 (how to run app and tests; decisions and assumptions).
 
-5. **Coverage** — If the project has tests, run "npm test -- --coverage" and report the coverage percentage vs §6.2 (80% minimum). If tests cannot be run in this environment, note that.
+5. **Coverage** — If the project has tests, run "uv run pytest --cov" and report the coverage percentage vs §6.2 (80% minimum). If tests cannot be run in this environment, note that.
 
 Output: write a single file .planning/TECHSPEC-AUDIT.md with the above sections. Do not modify other files unless the user explicitly asks to fix gaps.
 ```

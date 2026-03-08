@@ -18,7 +18,7 @@
 ```
 You are bootstrapping a GSD-style project. Read TECHSPEC.md and FRAMEWORK.md.
 
-1. Create STATE.md at the root using the template in FRAMEWORK.md §1. Set current phase to "Phase 01 — Foundation (in progress)" and next task to the first phase goal (e.g. create branch feature/phase-01-foundation, install deps per TECHSPEC §2.2, set up Biome, scaffold app per §3.2).
+1. Create STATE.md at the root using the template in FRAMEWORK.md §1. Set current phase to "Phase 01 — Foundation (in progress)" and next task to the first phase goal (e.g. create branch feature/phase-01-foundation, install deps per TECHSPEC §2.2, set up tooling (uv, Ruff), scaffold app per §3.2).
 
 2. Create .planning/ with .gitkeep.
 

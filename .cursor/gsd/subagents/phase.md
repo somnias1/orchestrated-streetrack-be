@@ -24,8 +24,8 @@ The phase structure for this project is defined in .planning/phase-00-ROADMAP.md
 
 1. Read STATE.md to see current phase and next task.
 2. Read .planning/phase-00-ROADMAP.md and find the row for Phase NN. Note: the phase Name, Goal, and Key TECHSPEC sections for this phase.
-3. Follow the GSD workflow: first output the Pre-Flight Checklist (branch feature/phase-NN-<slug>, spec .planning/phase-NN-SPEC.md, gate "npm test && npx biome check .", no work on main). Use the slug from the ROADMAP (e.g. foundation, data-store) or a short kebab-case name. Do not write any code until the user confirms.
-4. After confirmation: create and commit .planning/phase-NN-SPEC.md (scope = Goal and TECHSPEC sections for Phase NN from the ROADMAP). Then create the branch, implement everything required for this phase per the ROADMAP and the listed TECHSPEC sections, run "npm test && npx biome check ." before every commit, one commit per discrete task.
+3. Follow the GSD workflow: first output the Pre-Flight Checklist (branch feature/phase-NN-<slug>, spec .planning/phase-NN-SPEC.md, gate "uv run pytest && uv run robot tests/robot && uv run ruff check .", no work on main). Use the slug from the ROADMAP (e.g. foundation, data-model) or a short kebab-case name. Do not write any code until the user confirms.
+4. After confirmation: create and commit .planning/phase-NN-SPEC.md (scope = Goal and TECHSPEC sections for Phase NN from the ROADMAP). Then create the branch, implement everything required for this phase per the ROADMAP and the listed TECHSPEC sections, run "uv run pytest && uv run robot tests/robot && uv run ruff check ." before every commit, one commit per discrete task.
 5. When done: write .planning/phase-NN-SUMMARY.md, update STATE.md to "Phase NN complete", merge to main with --no-ff.
 
 If the ROADMAP does not exist or has no row for Phase NN, ask the user to create or update .planning/phase-00-ROADMAP.md first, or to confirm the phase number and goal.
