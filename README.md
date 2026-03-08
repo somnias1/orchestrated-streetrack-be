@@ -74,8 +74,9 @@ uv run pytest
 # With coverage
 uv run pytest --cov
 
-# Robot Framework (smoke / API)
+# Robot Framework (smoke / API; requires API running at BASE_URL, default http://localhost:8000)
 uv run robot tests/robot
+# Optional: set AUTH_TOKEN for protected flow tests (Bearer JWT from Auth0).
 
 # Lint and format (Ruff)
 uv run ruff check .
