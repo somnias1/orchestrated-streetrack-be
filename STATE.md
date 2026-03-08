@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 07 — Hangouts CRUD (complete)
+Phase 08 — Tests & verification (complete)
 
 ## Last Task Completed
 
-Phase 07: Hangouts CRUD — router, service, schemas (HangoutRead/Create/Update); list/get/create/update/delete scoped by user_id; 404 when not owned; gate passed; branch merged to main.
+Phase 08: Pytest unit (auth, category, subcategory, transaction, hangout services) and integration (one flow per resource, 401, 404, 422); Robot smoke + categories/hangouts flow; conftest (get_db/auth overrides); §1.3 mapping table in TECHSPEC; coverage ≥80%; phase branch merged to main.
 
 ## Next Task
 
-Phase 08 — Tests & verification: Pytest + Robot, coverage gate, §1.3 mapping table, DoD.
+Phase 09+ (new features per BACKLOG / FRAMEWORK.md §6).
 
 ## Key Decisions
 

@@ -29,20 +29,20 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 - **Hangouts**: List/get/create/update/delete scoped by `user_id`; 404 when not owned.
 - **API contract**: Responses match Pydantic schemas; **422** on validation errors with `detail: ValidationError[]`.
 
-**Test coverage mapping** (to be filled in the test phase; audit verifies each row):
+**Test coverage mapping** (filled Phase 08; audit verifies each row):
 
 | §1.3 case | Tool | Location (file / suite) |
 |-----------|------|-------------------------|
-| Auth: valid token → user_id | pytest | tests/unit/test_auth.py (or equivalent) |
-| Auth: invalid token → 401 | pytest | tests/unit/test_auth.py |
-| Auth: missing token → 401 | pytest | tests/unit/test_auth.py or integration |
-| Categories: list/get/create/update/delete scoped | pytest | tests/unit/test_services_category.py, tests/integration/ |
-| Categories: 404 when not owned | pytest | tests/unit or integration |
-| Subcategories: CRUD + category ownership | pytest | tests/unit/test_services_subcategory.py, integration |
-| Transactions: CRUD + subcategory/hangout ownership | pytest | tests/unit/test_services_transaction.py, integration |
-| Hangouts: CRUD scoped | pytest | tests/unit/test_services_hangout.py, integration |
-| API contract: 422 validation error shape | pytest / Robot | integration or Robot |
-| Smoke + one flow per resource (status, structure) | Robot | tests/robot/*.robot |
+| Auth: valid token → user_id | pytest | tests/unit/test_auth.py::test_valid_token_returns_user_id |
+| Auth: invalid token → 401 | pytest | tests/unit/test_auth.py::test_invalid_token_raises_401 |
+| Auth: missing token → 401 | pytest | tests/unit/test_auth.py::test_missing_token_raises_401, tests/integration/test_auth_401.py |
+| Categories: list/get/create/update/delete scoped | pytest | tests/unit/test_services_category.py, tests/integration/test_categories_api.py |
+| Categories: 404 when not owned | pytest | tests/unit/test_services_category.py, tests/integration/test_categories_api.py::test_categories_get_404_when_not_owned |
+| Subcategories: CRUD + category ownership | pytest | tests/unit/test_services_subcategory.py, tests/integration/test_subcategories_api.py |
+| Transactions: CRUD + subcategory/hangout ownership | pytest | tests/unit/test_services_transaction.py, tests/integration/test_transactions_api.py |
+| Hangouts: CRUD scoped | pytest | tests/unit/test_services_hangout.py, tests/integration/test_hangouts_api.py |
+| API contract: 422 validation error shape | pytest | tests/integration/test_auth_401.py::test_validation_error_returns_422_detail |
+| Smoke + one flow per resource (status, structure) | Robot | tests/robot/smoke.robot |
 
 ### 1.4 Out of Scope (v1 / current)
 
