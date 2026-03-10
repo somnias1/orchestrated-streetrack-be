@@ -21,6 +21,8 @@ Derived from TECHSPEC.md on 2026-03-09.
 | 15 | Transaction manager import/export | Add import preview/validation and CSV export flows on top of stable filters and bulk create | Sec 1.3, Sec 4.3 | 11, 14 |
 | 16 | Finance expansion tests & handoff | Add tests, robot coverage where practical, and FE contract verification for the new finance APIs | Sec 1.3, Sec 6, Sec 8.3 | 11-15 |
 
+**Note:** Phase 10 is documentation only (no application code).
+
 ## Phase sizing guidance
 
 - Each phase targets **one chat session** worth of work.

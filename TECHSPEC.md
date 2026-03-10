@@ -50,6 +50,12 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 | Hangouts: CRUD scoped | pytest | tests/unit/test_services_hangout.py, tests/integration/test_hangouts_api.py |
 | API contract: 422 validation error shape | pytest | tests/integration/test_auth_401.py::test_validation_error_returns_422_detail |
 | Smoke + one flow per resource (status, structure) | Robot | tests/robot/smoke.robot |
+| Categories/Subcategories filters: list by type; subcategories by category_id | pytest | TBD Phase 11/16 |
+| Transactions filters: date tree, subcategory_id, hangout_id; newest-first sort | pytest | TBD Phase 11/16 |
+| Periodic expenses: is_periodic, due_day validation; type consistency | pytest | TBD Phase 12/16 |
+| Dashboard: cumulative balance, month balance, due periodic expenses | pytest | TBD Phase 13/16 |
+| Bulk transactions: normalized-ID batch, ownership check, all-or-nothing | pytest | TBD Phase 14/16 |
+| Import/export: import preview vs existing pairs; export date-filtered CSV | pytest | TBD Phase 15/16 |
 
 ### 1.4 Out of Scope (current)
 
@@ -453,6 +459,7 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 
 | Date | Change |
 |------|--------|
+| 2026-03-09 | Phase 10 complete: §1.3 test coverage mapping extended with finance expansion cases (filters, periodic, dashboard, bulk, import/export) — locations TBD Phase 11–16. |
 | 2026-03-09 | Phase 10 planning: TECHSPEC expanded for filtering/sorting, periodic expenses, split dashboard endpoints, bulk transactions, and transaction manager import/export. |
 | 2026-03-08 | Phase 09: §4.1 Read schemas — SubcategoryRead and TransactionRead expose both ids and names (FE uses ids for lookups). |
 | 2026-03-XX | BE TECHSPEC created: full rewrite for streetrack-be. §1 Problem & Context (API, user scoping, Auth0, CRUD). §2 Tech stack (Python, uv, FastAPI, Ruff, pytest, Robot). §3 Architecture (app structure, conventions, §3.7 API design guidelines). §4 Data & APIs (ORM/schema contracts, storage, endpoint table, auth). §5–§8 NFRs, testing (pytest + Robot), deployment, GSD integration. Gate: `uv run pytest && uv run robot tests/robot && uv run ruff check .`. Aligned with FRAMEWORK.md for bootstrap and phase-driven development from scratch. |
