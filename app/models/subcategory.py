@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,6 +30,8 @@ class Subcategory(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description = mapped_column(String(1024), nullable=True)
     belongs_to_income: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_periodic: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    due_day = mapped_column(Integer, nullable=True)
 
     category: Mapped["Category"] = relationship("Category", back_populates="subcategories")  # noqa: UP037
     transactions: Mapped[list["Transaction"]] = relationship(  # noqa: UP037

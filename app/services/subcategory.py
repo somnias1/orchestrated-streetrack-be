@@ -20,6 +20,8 @@ def _row_to_read(row: Subcategory) -> SubcategoryRead:
         name=row.name,
         description=row.description,
         belongs_to_income=row.belongs_to_income,
+        is_periodic=row.is_periodic,
+        due_day=row.due_day,
         user_id=row.user_id,
         category_id=row.category_id,
         category_name=row.category.name if row.category else "",
@@ -65,25 +67,38 @@ def get_subcategory(db: Session, user_id: str, subcategory_id: uuid.UUID) -> Sub
     return _row_to_read(row)
 
 
-def _ensure_category_owned(db: Session, user_id: str, category_id: uuid.UUID) -> None:
-    """Raise 404 if category does not exist or is not owned by user."""
+def _ensure_category_owned(db: Session, user_id: str, category_id: uuid.UUID) -> Category:
+    """Return category if it exists and is owned by user; else raise 404."""
     cat = db.get(Category, category_id)
     if cat is None or cat.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found",
         )
+    return cat
+
+
+def _ensure_type_consistency(category: Category, belongs_to_income: bool) -> None:
+    """Raise 422 if subcategory belongs_to_income does not match category.is_income."""
+    if category.is_income != belongs_to_income:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="subcategory belongs_to_income must match category is_income",
+        )
 
 
 def create_subcategory(db: Session, user_id: str, body: SubcategoryCreate) -> SubcategoryRead:
     """Create subcategory for user_id; category must be owned by user. Else 404."""
-    _ensure_category_owned(db, user_id, body.category_id)
+    cat = _ensure_category_owned(db, user_id, body.category_id)
+    _ensure_type_consistency(cat, body.belongs_to_income)
     row = Subcategory(
         user_id=user_id,
         category_id=body.category_id,
         name=body.name,
         description=body.description,
         belongs_to_income=body.belongs_to_income,
+        is_periodic=body.is_periodic,
+        due_day=body.due_day,
     )
     db.add(row)
     db.commit()
@@ -98,21 +113,48 @@ def update_subcategory(
     body: SubcategoryUpdate,
 ) -> SubcategoryRead:
     """Update subcategory if owned; if category_id is set, that category must be owned. Else 404."""
-    row = db.get(Subcategory, subcategory_id)
+    row = (
+        db.execute(
+            select(Subcategory)
+            .where(Subcategory.id == subcategory_id)
+            .options(joinedload(Subcategory.category))
+        )
+        .unique()
+        .scalars().first()
+    )
     if row is None or row.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subcategory not found",
         )
     if body.category_id is not None:
-        _ensure_category_owned(db, user_id, body.category_id)
+        cat = _ensure_category_owned(db, user_id, body.category_id)
         row.category_id = body.category_id
+        effective_income = (
+            body.belongs_to_income if body.belongs_to_income is not None else row.belongs_to_income
+        )
+        _ensure_type_consistency(cat, effective_income)
+    if body.belongs_to_income is not None:
+        cat = row.category
+        if cat is None:
+            cat = db.get(Category, row.category_id)
+        if cat is not None:
+            _ensure_type_consistency(cat, body.belongs_to_income)
+        row.belongs_to_income = body.belongs_to_income
     if body.name is not None:
         row.name = body.name
     if body.description is not None:
         row.description = body.description
-    if body.belongs_to_income is not None:
-        row.belongs_to_income = body.belongs_to_income
+    if body.is_periodic is not None:
+        row.is_periodic = body.is_periodic
+    if body.due_day is not None:
+        row.due_day = body.due_day
+    # When is_periodic is true, due_day must be set (either from body or already on row)
+    if row.is_periodic and row.due_day is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="due_day is required when is_periodic is true",
+        )
     db.commit()
     db.refresh(row)
     return _row_to_read(row)

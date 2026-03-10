@@ -1,5 +1,6 @@
 """
-Unit tests for Subcategory service. §1.3: CRUD + category ownership checks; 404 when not owned.
+Unit tests for Subcategory service. §1.3: CRUD + category ownership; 404 when not owned;
+periodic expenses (is_periodic, due_day validation, type consistency).
 """
 
 from __future__ import annotations
@@ -10,12 +11,15 @@ from app.schemas.subcategory import SubcategoryCreate, SubcategoryUpdate
 from app.services import category as category_service
 from app.services import subcategory as subcategory_service
 from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 
-def _make_category(db: Session, user_id: str, name: str = "Cat"):
+def _make_category(
+    db: Session, user_id: str, name: str = "Cat", *, is_income: bool = False
+):
     return category_service.create_category(
-        db, user_id, CategoryCreate(name=name, description=None, is_income=False)
+        db, user_id, CategoryCreate(name=name, description=None, is_income=is_income)
     )
 
 
@@ -51,19 +55,26 @@ def test_list_subcategories_scoped(db_session: Session) -> None:
 
 def test_list_subcategories_filter_by_belongs_to_income(db_session: Session) -> None:
     """§1.3: List with belongs_to_income filter returns only matching subcategories."""
-    cat = _make_category(db_session, "user-1")
+    cat_income = _make_category(db_session, "user-1", "IncomeCat", is_income=True)
+    cat_expense = _make_category(db_session, "user-1", "ExpenseCat", is_income=False)
     subcategory_service.create_subcategory(
         db_session,
         "user-1",
         SubcategoryCreate(
-            category_id=cat.id, name="IncomeSub", description=None, belongs_to_income=True
+            category_id=cat_income.id,
+            name="IncomeSub",
+            description=None,
+            belongs_to_income=True,
         ),
     )
     subcategory_service.create_subcategory(
         db_session,
         "user-1",
         SubcategoryCreate(
-            category_id=cat.id, name="ExpenseSub", description=None, belongs_to_income=False
+            category_id=cat_expense.id,
+            name="ExpenseSub",
+            description=None,
+            belongs_to_income=False,
         ),
     )
     income_only = subcategory_service.list_subcategories(
@@ -147,7 +158,7 @@ def test_create_subcategory_404_when_category_not_owned(db_session: Session) -> 
 
 def test_create_subcategory_success(db_session: Session) -> None:
     """Create persists subcategory when category is owned."""
-    cat = _make_category(db_session, "user-1")
+    cat = _make_category(db_session, "user-1", "Cat", is_income=True)
     result = subcategory_service.create_subcategory(
         db_session,
         "user-1",
@@ -210,3 +221,53 @@ def test_delete_subcategory_success(db_session: Session) -> None:
     with pytest.raises(HTTPException) as exc_info:
         subcategory_service.get_subcategory(db_session, "user-1", created.id)
     assert exc_info.value.status_code == 404
+
+
+def test_create_subcategory_periodic_with_due_day_success(db_session: Session) -> None:
+    """§1.3: Create with is_periodic=true and valid due_day returns 201 and includes fields."""
+    cat = _make_category(db_session, "user-1", is_income=False)
+    result = subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat.id,
+            name="Rent",
+            description=None,
+            belongs_to_income=False,
+            is_periodic=True,
+            due_day=15,
+        ),
+    )
+    assert result.is_periodic is True
+    assert result.due_day == 15
+
+
+def test_create_subcategory_periodic_without_due_day_raises_422(db_session: Session) -> None:
+    """§1.3: Create with is_periodic=true and missing due_day raises validation error."""
+    cat = _make_category(db_session, "user-1", is_income=False)
+    with pytest.raises(ValidationError):
+        SubcategoryCreate(
+            category_id=cat.id,
+            name="Rent",
+            description=None,
+            belongs_to_income=False,
+            is_periodic=True,
+            due_day=None,
+        )
+
+
+def test_create_subcategory_type_mismatch_raises_422(db_session: Session) -> None:
+    """§1.3: Create with belongs_to_income != category.is_income returns 422."""
+    cat = _make_category(db_session, "user-1", "ExpenseCat", is_income=False)
+    with pytest.raises(HTTPException) as exc_info:
+        subcategory_service.create_subcategory(
+            db_session,
+            "user-1",
+            SubcategoryCreate(
+                category_id=cat.id,
+                name="Wrong",
+                description=None,
+                belongs_to_income=True,
+            ),
+        )
+    assert exc_info.value.status_code == 422
