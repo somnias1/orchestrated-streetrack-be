@@ -9,6 +9,15 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 ### Backend (streetrack-be)
 
 - [x] GSD bootstrap: STATE.md, .planning/, phase-00-ROADMAP.md (phases 01–08 defined; no app code yet)
+- [x] Phase 01 — Foundation
+- [x] Phase 02 — Data model + migrations
+- [x] Phase 03 — Auth
+- [x] Phase 04 — Categories CRUD
+- [x] Phase 05 — Subcategories CRUD
+- [x] Phase 06 — Transactions CRUD
+- [x] Phase 07 — Hangouts CRUD
+- [x] Phase 08 — Tests & verification
+- [x] Phase 09 — Read responses: names not IDs
 
 ### Frontend (streetrack-fe)
 
@@ -35,26 +44,23 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 
 ### Backend
 
-- [ ] **Phase 01 — Foundation:** Project scaffold, deps (uv, pyproject.toml), tooling (Ruff), app structure per §3.2, .gitattributes
-- [ ] **Phase 02 — Data model + migrations:** ORM models (Category, Subcategory, Transaction, Hangout), Alembic, initial migration
-- [ ] **Phase 03 — Auth:** Auth0 JWT validation, `get_current_user_id`, `CurrentUserId` dependency
-- [ ] **Phase 04 — Categories CRUD:** Router, service, schemas, list/get/create/update/delete (user-scoped)
-- [ ] **Phase 05 — Subcategories CRUD:** CRUD + category ownership check
-- [ ] **Phase 06 — Transactions CRUD:** CRUD + subcategory and optional hangout ownership
-- [ ] **Phase 07 — Hangouts CRUD:** CRUD (user-scoped)
-- [ ] **Phase 08 — Tests & verification:** Pytest + Robot, coverage gate, §1.3 mapping table
-- [ ] **Unit tests** (Phase 08)
-  - [ ] Auth: JWT validation, `get_current_user_id` (valid / invalid / missing token)
-  - [ ] Services: CategoryService CRUD (user scoping, 404 for wrong user)
-  - [ ] Services: SubcategoryService (category ownership)
-  - [ ] Services: TransactionService (subcategory/hangout ownership)
-  - [ ] Services: HangoutService CRUD
-  - [ ] Routers: at least one endpoint per resource (list, get, create) with mocked DB + auth
-  - [ ] Optional: integration tests (test client + DB or in-memory SQLite)
+- [ ] **Phase 10 — Finance expansion spec refresh:** TECHSPEC, roadmap, STATE, and backlog aligned for the finance stream
+- [ ] **Phase 11 — Filtering and sorting foundation:** categories by type, subcategories by type/category, transactions by date tree/subcategory/hangout
+- [ ] **Phase 12 — Periodic expenses:** `is_periodic`, `due_day`, type consistency, due-status rules
+- [ ] **Phase 13 — Home dashboard read APIs:** separate endpoints for cumulative balance, selected-month balance, and due periodic expenses
+- [ ] **Phase 14 — Bulk transactions:** strict normalized-ID bulk creation
+- [ ] **Phase 15 — Transaction manager import/export:** import preview from pasted sheet data and CSV export
+- [ ] **Phase 16 — Finance expansion tests & handoff:** pytest, integration, robot coverage where practical, FE contract verification
 
 ### Frontend
 
-- [ ] Optional: layout/UX refinements; keyboard/a11y for virtualized tables and dialogs
+- [ ] **Phase 18 — UX/UI improvements:** Type as MUI Chips; Transactions: Button+Menu (Transaction / Bulk); default current-month filter for transactions; Hangouts table action colors (primary/error)
+- [ ] **Phase 19 — List filters and sort:** Categories by type; Subcategories by type and category; Transactions by date tree, subcategory, hangout; sort by date (newest first); default current month on Transactions
+- [ ] **Phase 20 — Subcategory periodic expenses:** is_periodic, due_day in form and list
+- [ ] **Phase 21 — Home dashboard:** Balance, month balance, due periodic expenses (dashboard API client + Home screen)
+- [ ] **Phase 22 — Bulk transactions:** BulkTransactionsDialog and POST /transactions/bulk
+- [ ] **Phase 23 — Transaction manager import/export UI:** Import (paste → preview → bulk); Export (date-filtered CSV download)
+- [ ] **Phase 24 — Finance expansion tests and polish:** Tests for dashboard, bulk, import/export, filters, periodic; §1.3 mapping; coverage gate
 
 ---
 
@@ -64,7 +70,6 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 
 - [ ] Pagination metadata (e.g. total count, next/prev) for list endpoints if needed
 - [ ] Consistent validation messages and error response shape for frontend
-- [ ] Optional: filtering/sorting for transactions (date, category, etc.)
 - [ ] Optional: OpenAPI tags/descriptions for docs
 
 ### Frontend
@@ -78,17 +83,12 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 
 ### Backend
 
-- [ ] **Import/export (clipboard, defined format)**
-  - [ ] Define format (e.g. JSON or CSV: categories, subcategories, transactions, hangouts)
-  - [ ] Export: endpoint (or action) returning current user’s data in that format (for clipboard or download)
-  - [ ] Import: endpoint accepting same format; validate and create/update scoped to current user
-  - [ ] Idempotency / conflict handling (by id or business key) if needed
 - [ ] Rate limiting or abuse protection if needed
 - [ ] Optional: audit log or “last updated” for sensitive operations
 
 ### Frontend
 
-- [ ] **Import/export UI**
+- [ ] **Import/export UI** (Phase 23 covers main flow; below are refinements)
   - [ ] “Copy to clipboard” (export in defined format)
   - [ ] “Paste from clipboard” (parse and call import API)
   - [ ] Clear feedback on success and validation errors
@@ -103,8 +103,8 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 2. Move tasks from High / Medium / Later into **Done** as you complete them.
 3. **Virtualization**: Frontend has virtualized lists for categories, subcategories, transactions, and hangouts. Backend supports `?skip=` and `?limit=` on list endpoints.
 4. **Unit tests**: Frontend has Vitest/RTL/MSW tests and coverage gate. Backend unit tests remain High priority.
-5. **Import/export**: do after core CRUD and tests. Define the format once; implement backend first, then frontend clipboard/UI.
+5. **Import/export**: keep backend-first, but only after filters and bulk transaction creation are stable.
 
 ---
 
-_Last updated: Backend at Phase 01 — Foundation (in progress). GSD bootstrap complete (STATE.md, .planning/, phase-00-ROADMAP.md); no app code yet. Copy to streetrack-fe BACKLOG.md to keep repos in sync._
+_Last updated: FE ROADMAP extended with Phases 18–24 (finance stream). Backend at Phase 10 — Finance expansion spec refresh (in progress). Copy to streetrack-fe BACKLOG.md to keep repos in sync._

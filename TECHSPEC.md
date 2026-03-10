@@ -17,6 +17,7 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 - **Auth0 JWT** validation and a **CurrentUserId** dependency; all mutable endpoints require a valid Bearer token.
 - **CRUD** for **Categories**, **Subcategories**, **Transactions**, and **Hangouts** with strict user scoping: list/get only own rows; create/update/delete only own resources; subcategory create/update only if category belongs to user; transaction create/update only if subcategory and (when present) hangout belong to user.
 - List endpoints support **`skip`** and **`limit`** query params (defaults 0, 50).
+- Post-v1 finance expansion adds **filtering/sorting** for list endpoints, **periodic expense** metadata on subcategories, **Home/dashboard** read endpoints for balance and due expenses, **bulk transaction creation**, and **transaction import/export** flows.
 - **OpenAPI** exposed at `/openapi.json` for the frontend.
 - **Spec-first, phase-driven** development: phase specs committed before implementation; git history reflects the pipeline.
 
@@ -28,6 +29,12 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 - **Transactions**: Same; create/update only when subcategory (and optional hangout) belong to the user.
 - **Hangouts**: List/get/create/update/delete scoped by `user_id`; 404 when not owned.
 - **API contract**: Responses match Pydantic schemas; **422** on validation errors with `detail: ValidationError[]`.
+- **Categories/Subcategories filters**: list endpoints can filter by movement type; subcategories can also filter by `category_id`.
+- **Transactions filters**: list endpoint supports date-tree filtering (`year`, `month`, `day`) plus `subcategory_id` and `hangout_id`, with newest-first default sorting.
+- **Periodic expenses**: subcategories can be marked `is_periodic` with `due_day`; `due_day` is required only for periodic subcategories; category/subcategory type flags must match.
+- **Dashboard**: independent endpoints expose cumulative balance, selected-month balance, and due periodic expenses for a selected month.
+- **Bulk transactions**: normalized-ID bulk creation validates ownership first and is all-or-nothing.
+- **Import/export**: import validates pasted sheet rows against existing category/subcategory pairs and returns a payload ready for bulk creation; export returns date-filtered CSV ordered oldest to newest.
 
 **Test coverage mapping** (filled Phase 08; audit verifies each row):
 
@@ -44,9 +51,8 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 | API contract: 422 validation error shape | pytest | tests/integration/test_auth_401.py::test_validation_error_returns_422_detail |
 | Smoke + one flow per resource (status, structure) | Robot | tests/robot/smoke.robot |
 
-### 1.4 Out of Scope (v1 / current)
+### 1.4 Out of Scope (current)
 
-- **Import/export** endpoints (Later in BACKLOG); define format and implement in a future phase.
 - Rate limiting; audit log; frontend (lives in streetrack-fe).
 
 ### 1.5 Repository Deliverables
@@ -60,10 +66,10 @@ The **BACKLOG.md** at repo root is the full-stack backlog. Backend-relevant mapp
 
 | BACKLOG area | Backend scope | TECHSPEC sections | Phases (example) |
 |--------------|---------------|-------------------|------------------|
-| **Done** | FastAPI, CORS, Postgres, Alembic, Auth0, CRUD all four, schemas, config, description on Category/Subcategory | §1.2, §3, §4 | 01–07 (when building from scratch) |
-| **High** | Unit tests (auth, services, routers); optional integration | §1.3, §6 | 08 (Tests & verification) |
-| **Medium** | Pagination metadata; validation/error shape; filtering/sorting; OpenAPI polish | §4.3, §5 | Post–initial phases |
-| **Later** | Import/export endpoints; rate limiting; audit log | §1.4, §4 | Phase 09+ |
+| **Done** | FastAPI, CORS, Postgres, Alembic, Auth0, CRUD all four, schemas, config, names in read responses | §1.2, §3, §4 | 01–09 |
+| **High** | Filtering/sorting, periodic expenses, dashboard reads, bulk transactions, import/export | §1.2, §1.3, §4.1, §4.3 | 10–15 |
+| **Medium** | Pagination metadata; validation/error shape polish; OpenAPI polish | §4.3, §5 | Post–finance expansion |
+| **Later** | Rate limiting; audit log | §1.4, §4 | Future |
 
 List endpoints support **`?skip`** and **`?limit`**; document in README and .env.example.
 
@@ -172,6 +178,9 @@ All application source under **`app/`**. Root holds config, docs, tooling.
 - **Services**: Never trust client for `user_id`; always receive it from the dependency.
 - **404 policy**: When resource is not found or not owned by the user, return **404** (no 403 to avoid leaking existence).
 - **List endpoints**: Accept query params **`skip`**, **`limit`** (defaults 0, 50).
+- **Type consistency**: `category.is_income` and `subcategory.belongs_to_income` must match whenever a subcategory is created or updated.
+- **Periodic expenses**: `due_day` is valid only when `is_periodic=true`; due status is determined by whether the selected month contains at least one transaction for that subcategory.
+- **Dashboard design**: keep Home reads split into separate endpoints so heavier balance or due-expense queries do not block unrelated cards.
 - **Request/response**: Pydantic schemas; OpenAPI auto-generated by FastAPI.
 
 ### 3.4 API Surface Summary
@@ -180,7 +189,10 @@ All application source under **`app/`**. Root holds config, docs, tooling.
 - **Categories**: GET/POST `/categories/`, GET/PATCH/DELETE `/categories/{id}`.
 - **Subcategories**: GET/POST `/subcategories/`, GET/PATCH/DELETE `/subcategories/{id}`.
 - **Transactions**: GET/POST `/transactions/`, GET/PATCH/DELETE `/transactions/{id}`.
+- **Transactions bulk**: POST `/transactions/bulk`.
 - **Hangouts**: GET/POST `/hangouts/`, GET/PATCH/DELETE `/hangouts/{id}`.
+- **Dashboard**: GET `/dashboard/balance`, GET `/dashboard/month-balance`, GET `/dashboard/due-periodic-expenses`.
+- **Transaction manager**: POST `/transaction-manager/import`, GET `/transaction-manager/export`.
 
 Detailed contract table in §4.3.
 
@@ -190,7 +202,7 @@ Detailed contract table in §4.3.
 
 ### 3.6 Complexity Exceptions
 
-None for v1. Document any exception and rationale here if added later.
+- **Dashboard split**: Home metrics are intentionally split into three endpoints instead of one aggregate response so the frontend can fetch/render them independently and each query can evolve without coupling the others.
 
 ### 3.7 API Design Guidelines
 
@@ -224,11 +236,11 @@ All resources are **user-scoped**; `user_id` is set from the Auth0 token and may
 
 | Schema | Fields | Notes |
 |--------|--------|--------|
-| **Read** | id, category_id (uuid), category_name (str), name, description (str \| null), belongs_to_income (bool), user_id (str \| null) | Read responses expose category_id and category_name (FE uses id for lookups). |
-| **Create** | category_id (uuid, required), name (required), description (str \| null), belongs_to_income (bool, default false) | user_id from token. |
-| **Update** | category_id, name, description, belongs_to_income (all optional) | PATCH body. |
+| **Read** | id, category_id (uuid), category_name (str), name, description (str \| null), belongs_to_income (bool), is_periodic (bool), due_day (int \| null), user_id (str \| null) | Read responses expose category_id and category_name (FE uses id for lookups). |
+| **Create** | category_id (uuid, required), name (required), description (str \| null), belongs_to_income (bool, default false), is_periodic (bool, default false), due_day (int \| null) | user_id from token; `due_day` required only when `is_periodic=true`. |
+| **Update** | category_id, name, description, belongs_to_income, is_periodic, due_day (all optional) | PATCH body. |
 
-**ORM**: id (UUID PK), category_id (FK category.id CASCADE), user_id, name, description (str, nullable, 1024), belongs_to_income (bool). Many-to-one Category; one-to-many Transaction.
+**ORM**: id (UUID PK), category_id (FK category.id CASCADE), user_id, name, description (str, nullable, 1024), belongs_to_income (bool), is_periodic (bool), due_day (int, nullable). Many-to-one Category; one-to-many Transaction.
 
 #### Transaction
 
@@ -266,25 +278,26 @@ All resources are **user-scoped**; `user_id` is set from the Auth0 token and may
 
 The backend **implements** the following. OpenAPI at **GET /openapi.json** is the runtime source of truth; this table is the spec for implementation.
 
-List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). All path IDs are UUIDs.
+List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). All path IDs are UUIDs. For list filtering, use optional query params rather than separate search endpoints.
 
 | Method | Path | Request | Response | Errors |
 |--------|------|---------|----------|--------|
 | **Categories** |
-| GET | `/categories/` | query: skip?, limit? | 200: CategoryRead[] | 401 |
+| GET | `/categories/` | query: skip?, limit?, is_income? | 200: CategoryRead[] | 401, 422 |
 | POST | `/categories/` | body: CategoryCreate | 201: CategoryRead | 401, 422 |
 | GET | `/categories/{category_id}` | path | 200: CategoryRead | 401, 404 |
 | PATCH | `/categories/{category_id}` | path + body: CategoryUpdate | 200: CategoryRead | 401, 404, 422 |
 | DELETE | `/categories/{category_id}` | path | 204 | 401, 404 |
 | **Subcategories** |
-| GET | `/subcategories/` | query: skip?, limit? | 200: SubcategoryRead[] | 401 |
+| GET | `/subcategories/` | query: skip?, limit?, belongs_to_income?, category_id? | 200: SubcategoryRead[] | 401, 422 |
 | POST | `/subcategories/` | body: SubcategoryCreate | 201: SubcategoryRead | 401, 404, 422 |
 | GET | `/subcategories/{subcategory_id}` | path | 200: SubcategoryRead | 401, 404 |
 | PATCH | `/subcategories/{subcategory_id}` | path + body: SubcategoryUpdate | 200: SubcategoryRead | 401, 404, 422 |
 | DELETE | `/subcategories/{subcategory_id}` | path | 204 | 401, 404 |
 | **Transactions** |
-| GET | `/transactions/` | query: skip?, limit? | 200: TransactionRead[] | 401 |
+| GET | `/transactions/` | query: skip?, limit?, year?, month?, day?, subcategory_id?, hangout_id? | 200: TransactionRead[] | 401, 422 |
 | POST | `/transactions/` | body: TransactionCreate | 201: TransactionRead | 401, 404, 422 |
+| POST | `/transactions/bulk` | body: TransactionBulkCreate | 201: TransactionRead[] | 401, 404, 422 |
 | GET | `/transactions/{transaction_id}` | path | 200: TransactionRead | 401, 404 |
 | PATCH | `/transactions/{transaction_id}` | path + body: TransactionUpdate | 200: TransactionRead | 401, 404, 422 |
 | DELETE | `/transactions/{transaction_id}` | path | 204 | 401, 404 |
@@ -294,6 +307,13 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 | GET | `/hangouts/{hangout_id}` | path | 200: HangoutRead | 401, 404 |
 | PATCH | `/hangouts/{hangout_id}` | path + body: HangoutUpdate | 200: HangoutRead | 401, 404, 422 |
 | DELETE | `/hangouts/{hangout_id}` | path | 204 | 401, 404 |
+| **Dashboard** |
+| GET | `/dashboard/balance` | none | 200: DashboardBalanceRead | 401 |
+| GET | `/dashboard/month-balance` | query: year, month | 200: DashboardMonthBalanceRead | 401, 422 |
+| GET | `/dashboard/due-periodic-expenses` | query: year, month | 200: DashboardDuePeriodicExpenseRead[] | 401, 422 |
+| **Transaction manager** |
+| POST | `/transaction-manager/import` | body: TransactionImportRequest | 200: TransactionImportPreview | 401, 404, 422 |
+| GET | `/transaction-manager/export` | query: year?, month?, day?, subcategory_id?, hangout_id? | 200: text/csv | 401, 422 |
 
 ### 4.4 Authentication
 
@@ -308,6 +328,7 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 ### 5.1 Performance
 
 - List endpoints paginated via **skip**/ **limit**; no caching requirement for v1.
+- Home/dashboard reads stay split by concern so heavier aggregate queries do not delay unrelated cards in the frontend.
 
 ### 5.2 Security
 
@@ -397,6 +418,14 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 | 06 Transactions CRUD | §4.1, §4.3 — ownership check (subcategory, hangout) |
 | 07 Hangouts CRUD | §4.1, §4.3 |
 | 08 Tests & verification | §1.3, §6 — pytest + Robot, coverage, §1.3 mapping table |
+| 09 Read responses: names not IDs | §4.1, §4.3 — enriched read schemas for FE lookups |
+| 10 Finance expansion spec refresh | §1.2, §1.3, §4.1, §4.3 — new contracts and roadmap rows |
+| 11 Filtering and sorting foundation | §1.3, §4.3 — categories, subcategories, transactions query filters |
+| 12 Periodic expenses | §1.3, §4.1, §4.3 — subcategory fields, validation, due-status logic |
+| 13 Home dashboard read APIs | §1.3, §3.6, §4.3 — split balance and due-expense endpoints |
+| 14 Bulk transactions | §1.3, §4.3 — normalized-ID batch creation |
+| 15 Transaction manager import/export | §1.3, §4.3 — import preview and CSV export |
+| 16 Finance expansion tests & handoff | §1.3, §6, §8.3 — coverage and FE contract verification |
 
 (Actual phases come from `.planning/phase-00-ROADMAP.md` generated at bootstrap.)
 
@@ -424,5 +453,6 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 
 | Date | Change |
 |------|--------|
+| 2026-03-09 | Phase 10 planning: TECHSPEC expanded for filtering/sorting, periodic expenses, split dashboard endpoints, bulk transactions, and transaction manager import/export. |
 | 2026-03-08 | Phase 09: §4.1 Read schemas — SubcategoryRead and TransactionRead expose both ids and names (FE uses ids for lookups). |
 | 2026-03-XX | BE TECHSPEC created: full rewrite for streetrack-be. §1 Problem & Context (API, user scoping, Auth0, CRUD). §2 Tech stack (Python, uv, FastAPI, Ruff, pytest, Robot). §3 Architecture (app structure, conventions, §3.7 API design guidelines). §4 Data & APIs (ORM/schema contracts, storage, endpoint table, auth). §5–§8 NFRs, testing (pytest + Robot), deployment, GSD integration. Gate: `uv run pytest && uv run robot tests/robot && uv run ruff check .`. Aligned with FRAMEWORK.md for bootstrap and phase-driven development from scratch. |
