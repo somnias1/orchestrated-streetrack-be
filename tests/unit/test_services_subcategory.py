@@ -13,9 +13,11 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 
-def _make_category(db: Session, user_id: str, name: str = "Cat"):
+def _make_category(
+    db: Session, user_id: str, name: str = "Cat", *, is_income: bool = False
+):
     return category_service.create_category(
-        db, user_id, CategoryCreate(name=name, description=None, is_income=False)
+        db, user_id, CategoryCreate(name=name, description=None, is_income=is_income)
     )
 
 
@@ -51,19 +53,26 @@ def test_list_subcategories_scoped(db_session: Session) -> None:
 
 def test_list_subcategories_filter_by_belongs_to_income(db_session: Session) -> None:
     """§1.3: List with belongs_to_income filter returns only matching subcategories."""
-    cat = _make_category(db_session, "user-1")
+    cat_income = _make_category(db_session, "user-1", "IncomeCat", is_income=True)
+    cat_expense = _make_category(db_session, "user-1", "ExpenseCat", is_income=False)
     subcategory_service.create_subcategory(
         db_session,
         "user-1",
         SubcategoryCreate(
-            category_id=cat.id, name="IncomeSub", description=None, belongs_to_income=True
+            category_id=cat_income.id,
+            name="IncomeSub",
+            description=None,
+            belongs_to_income=True,
         ),
     )
     subcategory_service.create_subcategory(
         db_session,
         "user-1",
         SubcategoryCreate(
-            category_id=cat.id, name="ExpenseSub", description=None, belongs_to_income=False
+            category_id=cat_expense.id,
+            name="ExpenseSub",
+            description=None,
+            belongs_to_income=False,
         ),
     )
     income_only = subcategory_service.list_subcategories(
@@ -147,7 +156,7 @@ def test_create_subcategory_404_when_category_not_owned(db_session: Session) -> 
 
 def test_create_subcategory_success(db_session: Session) -> None:
     """Create persists subcategory when category is owned."""
-    cat = _make_category(db_session, "user-1")
+    cat = _make_category(db_session, "user-1", "Cat", is_income=True)
     result = subcategory_service.create_subcategory(
         db_session,
         "user-1",
