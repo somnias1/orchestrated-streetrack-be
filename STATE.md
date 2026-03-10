@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 10 — Finance expansion spec refresh (complete)
+Phase 11 — Filtering and sorting foundation (complete)
 
 ## Last Task Completed
 
-Phase 10: TECHSPEC §1.3 test mapping extended for finance expansion; BACKLOG and ROADMAP aligned; STATE and phase-10-SUMMARY updated. Documentation only; no app code.
+Phase 11: List filters for categories (is_income), subcategories (belongs_to_income, category_id), and transactions (year/month/day, subcategory_id, hangout_id); newest-first sort; §1.3 tests and mapping.
 
 ## Next Task
 
-Phase 11: Filtering and sorting foundation — list filters for categories, subcategories, and transactions; keep current response envelopes.
+Phase 12: Periodic expenses — subcategory periodic-expense fields, validation, and due-status business rules.
 
 ## Key Decisions
 
