@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 10 — Finance expansion spec refresh (in progress)
+Phase 10 — Finance expansion spec refresh (complete)
 
 ## Last Task Completed
 
-Phase 09: SubcategoryRead returns category_name; TransactionRead returns subcategory_name and hangout_name. Schemas, services (eager-load + _row_to_read), unit and integration tests updated; TECHSPEC §4.1 and phase-05/06 DoD docs updated. Gate passed; branch feature/phase-09-read-names-not-ids ready to merge.
+Phase 10: TECHSPEC §1.3 test mapping extended for finance expansion; BACKLOG and ROADMAP aligned; STATE and phase-10-SUMMARY updated. Documentation only; no app code.
 
 ## Next Task
 
-Phase 10: align TECHSPEC, BACKLOG, STATE, and roadmap with the finance expansion stream, then start Phase 11 list filtering/sorting foundations.
+Phase 11: Filtering and sorting foundation — list filters for categories, subcategories, and transactions; keep current response envelopes.
 
 ## Key Decisions
 

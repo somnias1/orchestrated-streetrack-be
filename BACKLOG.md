@@ -18,6 +18,7 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 - [x] Phase 07 — Hangouts CRUD
 - [x] Phase 08 — Tests & verification
 - [x] Phase 09 — Read responses: names not IDs
+- [x] Phase 10 — Finance expansion spec refresh (documentation only)
 
 ### Frontend (streetrack-fe)
 
@@ -44,7 +45,6 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 
 ### Backend
 
-- [ ] **Phase 10 — Finance expansion spec refresh (documentation only):** TECHSPEC, roadmap, STATE, and backlog aligned for the finance stream
 - [ ] **Phase 11 — Filtering and sorting foundation:** categories by type, subcategories by type/category, transactions by date tree/subcategory/hangout
 - [ ] **Phase 12 — Periodic expenses:** `is_periodic`, `due_day`, type consistency, due-status rules
 - [ ] **Phase 13 — Home dashboard read APIs:** separate endpoints for cumulative balance, selected-month balance, and due periodic expenses
@@ -107,4 +107,4 @@ Single backlog for **streetrack-be** (backend) and **streetrack-fe** (frontend).
 
 ---
 
-_Last updated: FE ROADMAP extended with Phases 18–24 (finance stream). Backend Phase 10 — Finance expansion spec refresh (doc-only) in progress. Copy to streetrack-fe BACKLOG.md to keep repos in sync._
+_Last updated: Backend Phase 10 complete (finance expansion spec refresh). Backend High: Phases 11–16. Copy to streetrack-fe BACKLOG.md to keep repos in sync._
