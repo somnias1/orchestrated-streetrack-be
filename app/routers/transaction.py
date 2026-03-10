@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.auth import CurrentUserId
@@ -22,9 +22,24 @@ def list_transactions(
     user_id: CurrentUserId,
     skip: int = 0,
     limit: int = 50,
+    year: int | None = None,
+    month: int | None = Query(None, ge=1, le=12),
+    day: int | None = Query(None, ge=1, le=31),
+    subcategory_id: uuid.UUID | None = None,
+    hangout_id: uuid.UUID | None = None,
 ) -> list[TransactionRead]:
-    """List transactions for the authenticated user."""
-    return transaction_service.list_transactions(db, user_id, skip=skip, limit=limit)
+    """List transactions (newest first). Optional: year, month, day, subcategory_id, hangout_id."""
+    return transaction_service.list_transactions(
+        db,
+        user_id,
+        skip=skip,
+        limit=limit,
+        year=year,
+        month=month,
+        day=day,
+        subcategory_id=subcategory_id,
+        hangout_id=hangout_id,
+    )
 
 
 @router.post("/", response_model=TransactionRead, status_code=status.HTTP_201_CREATED)

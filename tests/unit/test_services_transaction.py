@@ -82,6 +82,160 @@ def test_list_transactions_scoped(db_session: Session) -> None:
     assert len(list_b) == 1 and list_b[0].value == 200 and list_b[0].subcategory_name == "Sub"
 
 
+def test_list_transactions_newest_first(db_session: Session) -> None:
+    """§1.3: List returns transactions ordered by date descending (newest first)."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=1,
+            description="Old",
+            date=date(2024, 6, 1),
+            hangout_id=None,
+        ),
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=2,
+            description="New",
+            date=date(2025, 6, 1),
+            hangout_id=None,
+        ),
+    )
+    result = transaction_service.list_transactions(db_session, "user-1")
+    assert len(result) == 2
+    assert result[0].date == date(2025, 6, 1) and result[0].description == "New"
+    assert result[1].date == date(2024, 6, 1) and result[1].description == "Old"
+
+
+def test_list_transactions_filter_by_date_tree(db_session: Session) -> None:
+    """§1.3: List with year/month/day filters returns only matching transactions."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=1,
+            description="2024",
+            date=date(2024, 3, 15),
+            hangout_id=None,
+        ),
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=2,
+            description="2025",
+            date=date(2025, 3, 15),
+            hangout_id=None,
+        ),
+    )
+    by_year = transaction_service.list_transactions(db_session, "user-1", year=2025)
+    assert len(by_year) == 1 and by_year[0].description == "2025"
+    by_month = transaction_service.list_transactions(db_session, "user-1", month=3)
+    assert len(by_month) == 2
+    by_year_month = transaction_service.list_transactions(
+        db_session, "user-1", year=2025, month=3
+    )
+    assert len(by_year_month) == 1 and by_year_month[0].description == "2025"
+    by_day = transaction_service.list_transactions(db_session, "user-1", year=2025, month=3, day=15)
+    assert len(by_day) == 1 and by_day[0].date == date(2025, 3, 15)
+
+
+def test_list_transactions_filter_by_subcategory_id(db_session: Session) -> None:
+    """§1.3: List with subcategory_id returns only transactions for that subcategory."""
+    cat = _make_category(db_session, "user-1")
+    sub1 = _make_subcategory(db_session, "user-1", cat.id)
+    sub2 = subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat.id, name="Sub2", description=None, belongs_to_income=False
+        ),
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub1.id,
+            value=10,
+            description="S1",
+            date=date(2025, 1, 1),
+            hangout_id=None,
+        ),
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub2.id,
+            value=20,
+            description="S2",
+            date=date(2025, 1, 2),
+            hangout_id=None,
+        ),
+    )
+    by_sub1 = transaction_service.list_transactions(
+        db_session, "user-1", subcategory_id=sub1.id
+    )
+    assert len(by_sub1) == 1 and by_sub1[0].subcategory_id == sub1.id and by_sub1[0].value == 10
+
+
+def test_list_transactions_filter_by_hangout_id(db_session: Session) -> None:
+    """§1.3: List with hangout_id returns only transactions linked to that hangout."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    hang1 = _make_hangout(db_session, "user-1")
+    hang2 = hangout_service.create_hangout(
+        db_session, "user-1", HangoutCreate(name="H2", date=date(2025, 2, 1), description=None)
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=1,
+            description="H1",
+            date=date(2025, 1, 1),
+            hangout_id=hang1.id,
+        ),
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=2,
+            description="H2",
+            date=date(2025, 1, 2),
+            hangout_id=hang2.id,
+        ),
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=sub.id,
+            value=3,
+            description="NoHang",
+            date=date(2025, 1, 3),
+            hangout_id=None,
+        ),
+    )
+    by_hang1 = transaction_service.list_transactions(db_session, "user-1", hangout_id=hang1.id)
+    assert len(by_hang1) == 1 and by_hang1[0].hangout_id == hang1.id and by_hang1[0].value == 1
+
+
 def test_get_transaction_404_when_not_owned(db_session: Session) -> None:
     """Get raises 404 when transaction exists but belongs to another user."""
     cat = _make_category(db_session, "user-owner")

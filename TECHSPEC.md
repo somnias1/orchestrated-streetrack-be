@@ -50,8 +50,8 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 | Hangouts: CRUD scoped | pytest | tests/unit/test_services_hangout.py, tests/integration/test_hangouts_api.py |
 | API contract: 422 validation error shape | pytest | tests/integration/test_auth_401.py::test_validation_error_returns_422_detail |
 | Smoke + one flow per resource (status, structure) | Robot | tests/robot/smoke.robot |
-| Categories/Subcategories filters: list by type; subcategories by category_id | pytest | TBD Phase 11/16 |
-| Transactions filters: date tree, subcategory_id, hangout_id; newest-first sort | pytest | TBD Phase 11/16 |
+| Categories/Subcategories filters: list by type; subcategories by category_id | pytest | tests/unit/test_services_category.py::test_list_categories_filter_by_is_income, tests/unit/test_services_subcategory.py::test_list_subcategories_filter_by_belongs_to_income, test_list_subcategories_filter_by_category_id |
+| Transactions filters: date tree, subcategory_id, hangout_id; newest-first sort | pytest | tests/unit/test_services_transaction.py::test_list_transactions_newest_first, test_list_transactions_filter_by_date_tree, test_list_transactions_filter_by_subcategory_id, test_list_transactions_filter_by_hangout_id |
 | Periodic expenses: is_periodic, due_day validation; type consistency | pytest | TBD Phase 12/16 |
 | Dashboard: cumulative balance, month balance, due periodic expenses | pytest | TBD Phase 13/16 |
 | Bulk transactions: normalized-ID batch, ownership check, all-or-nothing | pytest | TBD Phase 14/16 |
@@ -459,6 +459,7 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 
 | Date | Change |
 |------|--------|
+| 2026-03-09 | Phase 11 complete: list filters (categories is_income; subcategories belongs_to_income, category_id; transactions year/month/day, subcategory_id, hangout_id) and newest-first sort; §1.3 mapping updated with test locations. |
 | 2026-03-09 | Phase 10 complete: §1.3 test coverage mapping extended with finance expansion cases (filters, periodic, dashboard, bulk, import/export) — locations TBD Phase 11–16. |
 | 2026-03-09 | Phase 10 planning: TECHSPEC expanded for filtering/sorting, periodic expenses, split dashboard endpoints, bulk transactions, and transaction manager import/export. |
 | 2026-03-08 | Phase 09: §4.1 Read schemas — SubcategoryRead and TransactionRead expose both ids and names (FE uses ids for lookups). |

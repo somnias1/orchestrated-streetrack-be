@@ -49,6 +49,61 @@ def test_list_subcategories_scoped(db_session: Session) -> None:
     assert len(list_b) == 1 and list_b[0].name == "SubB" and list_b[0].category_name == "CatB"
 
 
+def test_list_subcategories_filter_by_belongs_to_income(db_session: Session) -> None:
+    """§1.3: List with belongs_to_income filter returns only matching subcategories."""
+    cat = _make_category(db_session, "user-1")
+    subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat.id, name="IncomeSub", description=None, belongs_to_income=True
+        ),
+    )
+    subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat.id, name="ExpenseSub", description=None, belongs_to_income=False
+        ),
+    )
+    income_only = subcategory_service.list_subcategories(
+        db_session, "user-1", belongs_to_income=True
+    )
+    expense_only = subcategory_service.list_subcategories(
+        db_session, "user-1", belongs_to_income=False
+    )
+    assert len(income_only) == 1 and income_only[0].belongs_to_income is True
+    assert len(expense_only) == 1 and expense_only[0].belongs_to_income is False
+
+
+def test_list_subcategories_filter_by_category_id(db_session: Session) -> None:
+    """§1.3: List with category_id filter returns only subcategories in that category."""
+    cat1 = _make_category(db_session, "user-1", "Cat1")
+    cat2 = _make_category(db_session, "user-1", "Cat2")
+    subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat1.id, name="Sub1", description=None, belongs_to_income=False
+        ),
+    )
+    subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat2.id, name="Sub2", description=None, belongs_to_income=False
+        ),
+    )
+    by_cat1 = subcategory_service.list_subcategories(
+        db_session, "user-1", category_id=cat1.id
+    )
+    by_cat2 = subcategory_service.list_subcategories(
+        db_session, "user-1", category_id=cat2.id
+    )
+    assert len(by_cat1) == 1 and by_cat1[0].category_id == cat1.id
+    assert len(by_cat2) == 1 and by_cat2[0].category_id == cat2.id
+
+
 def test_get_subcategory_found(db_session: Session) -> None:
     """Get returns subcategory when found and owned."""
     cat = _make_category(db_session, "user-1")

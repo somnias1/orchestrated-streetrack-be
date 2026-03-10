@@ -35,6 +35,26 @@ def test_list_categories_scoped(db_session: Session) -> None:
     assert list_b[0].name == "B"
 
 
+def test_list_categories_filter_by_is_income(db_session: Session) -> None:
+    """§1.3: List with is_income filter returns only matching categories."""
+    category_service.create_category(
+        db_session, "user-1", CategoryCreate(name="Income", description=None, is_income=True)
+    )
+    category_service.create_category(
+        db_session, "user-1", CategoryCreate(name="Expense", description=None, is_income=False)
+    )
+    all_cats = category_service.list_categories(db_session, "user-1")
+    assert len(all_cats) == 2
+    income_only = category_service.list_categories(
+        db_session, "user-1", is_income=True
+    )
+    expense_only = category_service.list_categories(
+        db_session, "user-1", is_income=False
+    )
+    assert len(income_only) == 1 and income_only[0].is_income is True
+    assert len(expense_only) == 1 and expense_only[0].is_income is False
+
+
 def test_get_category_found(db_session: Session) -> None:
     """Get returns category when found and owned."""
     created = category_service.create_category(
