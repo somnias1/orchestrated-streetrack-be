@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 11 — Filtering and sorting foundation (complete)
+Phase 12 — Periodic expenses (complete)
 
 ## Last Task Completed
 
-Phase 11: List filters for categories (is_income), subcategories (belongs_to_income, category_id), and transactions (year/month/day, subcategory_id, hangout_id); newest-first sort; §1.3 tests and mapping.
+Phase 12: Subcategory is_periodic and due_day (ORM, migration, schemas, validation); type consistency (category is_income vs belongs_to_income); due-status business logic (get_due_periodic_expenses); §1.3 tests and mapping.
 
 ## Next Task
 
-Phase 12: Periodic expenses — subcategory periodic-expense fields, validation, and due-status business rules.
+Phase 13: Home dashboard read APIs — cumulative balance, selected-month balance, due periodic expenses endpoints.
 
 ## Key Decisions
 

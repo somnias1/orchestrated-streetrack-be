@@ -52,7 +52,7 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 | Smoke + one flow per resource (status, structure) | Robot | tests/robot/smoke.robot |
 | Categories/Subcategories filters: list by type; subcategories by category_id | pytest | tests/unit/test_services_category.py::test_list_categories_filter_by_is_income, tests/unit/test_services_subcategory.py::test_list_subcategories_filter_by_belongs_to_income, test_list_subcategories_filter_by_category_id |
 | Transactions filters: date tree, subcategory_id, hangout_id; newest-first sort | pytest | tests/unit/test_services_transaction.py::test_list_transactions_newest_first, test_list_transactions_filter_by_date_tree, test_list_transactions_filter_by_subcategory_id, test_list_transactions_filter_by_hangout_id |
-| Periodic expenses: is_periodic, due_day validation; type consistency | pytest | TBD Phase 12/16 |
+| Periodic expenses: is_periodic, due_day validation; type consistency | pytest | tests/unit/test_services_subcategory.py::test_create_subcategory_periodic_with_due_day_success, test_create_subcategory_periodic_without_due_day_raises_422, test_create_subcategory_type_mismatch_raises_422; tests/unit/test_services_dashboard.py (due-status: paid when transaction in month) |
 | Dashboard: cumulative balance, month balance, due periodic expenses | pytest | TBD Phase 13/16 |
 | Bulk transactions: normalized-ID batch, ownership check, all-or-nothing | pytest | TBD Phase 14/16 |
 | Import/export: import preview vs existing pairs; export date-filtered CSV | pytest | TBD Phase 15/16 |
