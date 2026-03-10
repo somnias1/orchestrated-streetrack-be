@@ -22,9 +22,18 @@ def list_subcategories(
     user_id: CurrentUserId,
     skip: int = 0,
     limit: int = 50,
+    belongs_to_income: bool | None = None,
+    category_id: uuid.UUID | None = None,
 ) -> list[SubcategoryRead]:
-    """List subcategories for the authenticated user."""
-    return subcategory_service.list_subcategories(db, user_id, skip=skip, limit=limit)
+    """List subcategories. Optional filters: belongs_to_income, category_id."""
+    return subcategory_service.list_subcategories(
+        db,
+        user_id,
+        skip=skip,
+        limit=limit,
+        belongs_to_income=belongs_to_income,
+        category_id=category_id,
+    )
 
 
 @router.post("/", response_model=SubcategoryRead, status_code=status.HTTP_201_CREATED)

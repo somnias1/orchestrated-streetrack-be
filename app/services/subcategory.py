@@ -31,16 +31,20 @@ def list_subcategories(
     user_id: str,
     skip: int = 0,
     limit: int = 50,
+    belongs_to_income: bool | None = None,
+    category_id: uuid.UUID | None = None,
 ) -> list[SubcategoryRead]:
-    """Return subcategories for user_id, ordered by name."""
+    """Return subcategories for user_id. Optional filters: belongs_to_income, category_id."""
     stmt = (
         select(Subcategory)
         .where(Subcategory.user_id == user_id)
         .options(joinedload(Subcategory.category))
-        .order_by(Subcategory.name)
-        .offset(skip)
-        .limit(limit)
     )
+    if belongs_to_income is not None:
+        stmt = stmt.where(Subcategory.belongs_to_income == belongs_to_income)
+    if category_id is not None:
+        stmt = stmt.where(Subcategory.category_id == category_id)
+    stmt = stmt.order_by(Subcategory.name).offset(skip).limit(limit)
     rows = db.execute(stmt).scalars().all()
     return [_row_to_read(r) for r in rows]
 
