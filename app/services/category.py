@@ -17,15 +17,13 @@ def list_categories(
     user_id: str,
     skip: int = 0,
     limit: int = 50,
+    is_income: bool | None = None,
 ) -> list[CategoryRead]:
-    """Return categories for user_id, ordered by name."""
-    stmt = (
-        select(Category)
-        .where(Category.user_id == user_id)
-        .order_by(Category.name)
-        .offset(skip)
-        .limit(limit)
-    )
+    """Return categories for user_id, ordered by name. Optional filter by is_income."""
+    stmt = select(Category).where(Category.user_id == user_id)
+    if is_income is not None:
+        stmt = stmt.where(Category.is_income == is_income)
+    stmt = stmt.order_by(Category.name).offset(skip).limit(limit)
     rows = db.execute(stmt).scalars().all()
     return [CategoryRead.model_validate(r) for r in rows]
 

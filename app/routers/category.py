@@ -22,9 +22,12 @@ def list_categories(
     user_id: CurrentUserId,
     skip: int = 0,
     limit: int = 50,
+    is_income: bool | None = None,
 ) -> list[CategoryRead]:
-    """List categories for the authenticated user."""
-    return category_service.list_categories(db, user_id, skip=skip, limit=limit)
+    """List categories for the authenticated user. Optional filter by is_income."""
+    return category_service.list_categories(
+        db, user_id, skip=skip, limit=limit, is_income=is_income
+    )
 
 
 @router.post("/", response_model=CategoryRead, status_code=status.HTTP_201_CREATED)
