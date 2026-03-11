@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import get_engine
 from app.db.config import Settings
 from app.routers.category import router as category_router
+from app.routers.dashboard import router as dashboard_router
 from app.routers.hangout import router as hangout_router
 from app.routers.subcategory import router as subcategory_router
 from app.routers.transaction import router as transaction_router
@@ -42,6 +43,7 @@ def health() -> dict[str, str]:
 
 
 app.include_router(category_router)
+app.include_router(dashboard_router)
 app.include_router(hangout_router)
 app.include_router(subcategory_router)
 app.include_router(transaction_router)
