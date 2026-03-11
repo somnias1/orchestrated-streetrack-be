@@ -10,6 +10,7 @@ from app.routers.dashboard import router as dashboard_router
 from app.routers.hangout import router as hangout_router
 from app.routers.subcategory import router as subcategory_router
 from app.routers.transaction import router as transaction_router
+from app.routers.transaction_manager import router as transaction_manager_router
 
 
 @asynccontextmanager
@@ -47,3 +48,4 @@ app.include_router(dashboard_router)
 app.include_router(hangout_router)
 app.include_router(subcategory_router)
 app.include_router(transaction_router)
+app.include_router(transaction_manager_router)
