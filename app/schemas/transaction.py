@@ -18,6 +18,12 @@ class TransactionCreate(BaseModel):
     hangout_id: uuid.UUID | None = None
 
 
+class TransactionBulkCreate(BaseModel):
+    """POST /transactions/bulk body. Normalized-ID items; ownership checked then all-or-nothing."""
+
+    transactions: list[TransactionCreate]
+
+
 class TransactionUpdate(BaseModel):
     subcategory_id: uuid.UUID | None = None
     value: int | None = None
