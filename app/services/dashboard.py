@@ -1,15 +1,80 @@
-"""Dashboard service: due-periodic-expenses business logic. TECHSPEC §3.3, §4.3."""
+"""Dashboard service: balance and due-periodic-expenses. TECHSPEC §3.3, §4.3."""
 
 from __future__ import annotations
 
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.subcategory import Subcategory
 from app.models.transaction import Transaction
-from app.schemas.dashboard import DashboardDuePeriodicExpenseRead
+from app.schemas.dashboard import (
+    DashboardBalanceRead,
+    DashboardDuePeriodicExpenseRead,
+    DashboardMonthBalanceRead,
+)
+
+
+def get_cumulative_balance(db: Session, user_id: str) -> DashboardBalanceRead:
+    """
+    Return cumulative net balance: sum of transaction values for income subcategories
+    minus sum for expense subcategories. Same unit as Transaction.value.
+    """
+    stmt = (
+        select(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (Subcategory.belongs_to_income.is_(True), Transaction.value),
+                        else_=-Transaction.value,
+                    )
+                ),
+                0,
+            )
+        )
+        .select_from(Transaction)
+        .join(Subcategory, Transaction.subcategory_id == Subcategory.id)
+        .where(Transaction.user_id == user_id)
+    )
+    total = db.execute(stmt).scalar()
+    return DashboardBalanceRead(balance=int(total or 0))
+
+
+def get_month_balance(
+    db: Session, user_id: str, year: int, month: int
+) -> DashboardMonthBalanceRead:
+    """
+    Return net balance for the given (year, month): same sign convention as
+    get_cumulative_balance, restricted to transactions in that month.
+    """
+    start = date(year, month, 1)
+    if month == 12:
+        end = date(year + 1, 1, 1)
+    else:
+        end = date(year, month + 1, 1)
+    stmt = (
+        select(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (Subcategory.belongs_to_income.is_(True), Transaction.value),
+                        else_=-Transaction.value,
+                    )
+                ),
+                0,
+            )
+        )
+        .select_from(Transaction)
+        .join(Subcategory, Transaction.subcategory_id == Subcategory.id)
+        .where(
+            Transaction.user_id == user_id,
+            Transaction.date >= start,
+            Transaction.date < end,
+        )
+    )
+    total = db.execute(stmt).scalar()
+    return DashboardMonthBalanceRead(balance=int(total or 0), year=year, month=month)
 
 
 def get_due_periodic_expenses(
