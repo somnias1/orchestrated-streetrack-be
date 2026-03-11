@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 14 — Bulk transactions (complete)
+Phase 15 — Transaction manager import/export (complete)
 
 ## Last Task Completed
 
-Phase 14: TransactionBulkCreate schema, POST /transactions/bulk, bulk_create_transactions (ownership check then all-or-nothing); §1.3 tests and mapping.
+Phase 15: POST /transaction-manager/import (TransactionImportRequest → TransactionImportPreview), GET /transaction-manager/export (query filters → text/csv, oldest to newest); §1.3 tests.
 
 ## Next Task
 
-Phase 15: Transaction manager import/export — import preview/validation and CSV export.
+Phase 16: Finance expansion tests & handoff — tests, robot coverage where practical, FE contract verification.
 
 ## Key Decisions
 
