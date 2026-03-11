@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 13 — Home dashboard read APIs (complete)
+Phase 14 — Bulk transactions (complete)
 
 ## Last Task Completed
 
-Phase 13: Dashboard router and endpoints (GET /dashboard/balance, /dashboard/month-balance, /dashboard/due-periodic-expenses); DashboardBalanceRead, DashboardMonthBalanceRead schemas; get_cumulative_balance, get_month_balance; §1.3 tests and mapping.
+Phase 14: TransactionBulkCreate schema, POST /transactions/bulk, bulk_create_transactions (ownership check then all-or-nothing); §1.3 tests and mapping.
 
 ## Next Task
 
-Phase 14: Bulk transactions — normalized-ID bulk transaction creation, ownership check, all-or-nothing.
+Phase 15: Transaction manager import/export — import preview/validation and CSV export.
 
 ## Key Decisions
 

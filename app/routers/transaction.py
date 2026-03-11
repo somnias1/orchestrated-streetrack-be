@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.auth import CurrentUserId
 from app.db.session import get_db
-from app.schemas.transaction import TransactionCreate, TransactionRead, TransactionUpdate
+from app.schemas.transaction import (
+    TransactionBulkCreate,
+    TransactionCreate,
+    TransactionRead,
+    TransactionUpdate,
+)
 from app.services import transaction as transaction_service
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -50,6 +55,20 @@ def create_transaction(
 ) -> TransactionRead:
     """Create a transaction (subcategory and optional hangout must be owned)."""
     return transaction_service.create_transaction(db, user_id, body)
+
+
+@router.post(
+    "/bulk",
+    response_model=list[TransactionRead],
+    status_code=status.HTTP_201_CREATED,
+)
+def bulk_create_transactions(
+    db: Annotated[Session, Depends(get_db)],
+    user_id: CurrentUserId,
+    body: TransactionBulkCreate,
+) -> list[TransactionRead]:
+    """Create transactions in bulk; ownership checked first, then all-or-nothing."""
+    return transaction_service.bulk_create_transactions(db, user_id, body)
 
 
 @router.get("/{transaction_id}", response_model=TransactionRead)

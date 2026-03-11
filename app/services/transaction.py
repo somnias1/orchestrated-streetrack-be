@@ -12,7 +12,12 @@ from sqlalchemy.sql import extract
 from app.models.hangout import Hangout
 from app.models.subcategory import Subcategory
 from app.models.transaction import Transaction
-from app.schemas.transaction import TransactionCreate, TransactionRead, TransactionUpdate
+from app.schemas.transaction import (
+    TransactionBulkCreate,
+    TransactionCreate,
+    TransactionRead,
+    TransactionUpdate,
+)
 
 
 def _row_to_read(row: Transaction) -> TransactionRead:
@@ -173,3 +178,29 @@ def delete_transaction(
         )
     db.delete(row)
     db.commit()
+
+
+def bulk_create_transactions(
+    db: Session, user_id: str, body: TransactionBulkCreate
+) -> list[TransactionRead]:
+    """Check ownership of all subcategory/hangout refs, then create all rows all-or-nothing."""
+    for item in body.transactions:
+        _ensure_subcategory_owned(db, user_id, item.subcategory_id)
+        if item.hangout_id is not None:
+            _ensure_hangout_owned(db, user_id, item.hangout_id)
+    rows = [
+        Transaction(
+            user_id=user_id,
+            subcategory_id=item.subcategory_id,
+            value=item.value,
+            description=item.description,
+            date=item.date,
+            hangout_id=item.hangout_id,
+        )
+        for item in body.transactions
+    ]
+    db.add_all(rows)
+    db.commit()
+    for row in rows:
+        db.refresh(row)
+    return [_row_to_read(r) for r in rows]
