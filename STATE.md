@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 12 — Periodic expenses (complete)
+Phase 13 — Home dashboard read APIs (complete)
 
 ## Last Task Completed
 
-Phase 12: Subcategory is_periodic and due_day (ORM, migration, schemas, validation); type consistency (category is_income vs belongs_to_income); due-status business logic (get_due_periodic_expenses); §1.3 tests and mapping.
+Phase 13: Dashboard router and endpoints (GET /dashboard/balance, /dashboard/month-balance, /dashboard/due-periodic-expenses); DashboardBalanceRead, DashboardMonthBalanceRead schemas; get_cumulative_balance, get_month_balance; §1.3 tests and mapping.
 
 ## Next Task
 
-Phase 13: Home dashboard read APIs — cumulative balance, selected-month balance, due periodic expenses endpoints.
+Phase 14: Bulk transactions — normalized-ID bulk transaction creation, ownership check, all-or-nothing.
 
 ## Key Decisions
 
