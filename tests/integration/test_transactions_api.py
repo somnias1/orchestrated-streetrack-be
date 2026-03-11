@@ -136,3 +136,121 @@ def test_transactions_get_404_when_not_owned(
 
     r = client.get(f"/transactions/{tx_id}", headers={"X-Test-User-Id": "user-b"})
     assert r.status_code == 404
+
+
+def test_bulk_create_transactions_201_and_returns_list(
+    client: TestClient, clean_db: None, subcategory_id: str
+) -> None:
+    """POST /transactions/bulk returns 201 and list of TransactionRead in order."""
+    headers = {"X-Test-User-Id": "test-user-tx"}
+    body = {
+        "transactions": [
+            {
+                "subcategory_id": subcategory_id,
+                "value": -100,
+                "description": "Bulk A",
+                "date": "2025-04-01",
+                "hangout_id": None,
+            },
+            {
+                "subcategory_id": subcategory_id,
+                "value": -200,
+                "description": "Bulk B",
+                "date": "2025-04-02",
+                "hangout_id": None,
+            },
+        ]
+    }
+    r = client.post("/transactions/bulk", headers=headers, json=body)
+    assert r.status_code == 201
+    data = r.json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+    assert data[0]["value"] == -100 and data[0]["description"] == "Bulk A"
+    assert data[1]["value"] == -200 and data[1]["description"] == "Bulk B"
+    assert data[0]["subcategory_id"] == subcategory_id
+    r = client.get("/transactions/", headers=headers)
+    assert r.status_code == 200
+    assert len(r.json()) == 2
+
+
+def test_bulk_create_transactions_without_auth_returns_401(
+    client: TestClient, clean_db: None, subcategory_id: str
+) -> None:
+    """POST /transactions/bulk returns 401 without X-Test-User-Id."""
+    body = {
+        "transactions": [
+            {
+                "subcategory_id": subcategory_id,
+                "value": 1,
+                "description": "x",
+                "date": "2025-01-01",
+                "hangout_id": None,
+            },
+        ]
+    }
+    r = client.post("/transactions/bulk", json=body)
+    assert r.status_code == 401
+
+
+def test_bulk_create_transactions_404_when_subcategory_not_owned(
+    client: TestClient, clean_db: None
+) -> None:
+    """POST /transactions/bulk returns 404 when body references subcategory not owned."""
+    # Create category + subcategory as user-a
+    r = client.post(
+        "/categories/",
+        headers={"X-Test-User-Id": "user-a"},
+        json={"name": "C", "description": None, "is_income": False},
+    )
+    assert r.status_code == 201
+    cat_id = r.json()["id"]
+    r = client.post(
+        "/subcategories/",
+        headers={"X-Test-User-Id": "user-a"},
+        json={
+            "category_id": cat_id,
+            "name": "S",
+            "description": None,
+            "belongs_to_income": False,
+        },
+    )
+    assert r.status_code == 201
+    sub_a_id = r.json()["id"]
+    # user-b tries to create transactions with user-a's subcategory
+    body = {
+        "transactions": [
+            {
+                "subcategory_id": sub_a_id,
+                "value": 1,
+                "description": "x",
+                "date": "2025-01-01",
+                "hangout_id": None,
+            },
+        ]
+    }
+    r = client.post(
+        "/transactions/bulk",
+        headers={"X-Test-User-Id": "user-b"},
+        json=body,
+    )
+    assert r.status_code == 404
+
+
+def test_bulk_create_transactions_invalid_body_422(client: TestClient, clean_db: None) -> None:
+    """POST /transactions/bulk returns 422 when body is invalid (e.g. missing required field)."""
+    r = client.post(
+        "/transactions/bulk",
+        headers={"X-Test-User-Id": "test-user"},
+        json={
+            "transactions": [
+                {
+                    "subcategory_id": "not-a-uuid",
+                    "value": 1,
+                    "description": "x",
+                    "date": "2025-01-01",
+                },
+            ]
+        },
+    )
+    assert r.status_code == 422

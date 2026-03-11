@@ -11,7 +11,11 @@ import pytest
 from app.schemas.category import CategoryCreate
 from app.schemas.hangout import HangoutCreate
 from app.schemas.subcategory import SubcategoryCreate
-from app.schemas.transaction import TransactionCreate, TransactionUpdate
+from app.schemas.transaction import (
+    TransactionBulkCreate,
+    TransactionCreate,
+    TransactionUpdate,
+)
 from app.services import category as category_service
 from app.services import hangout as hangout_service
 from app.services import subcategory as subcategory_service
@@ -381,3 +385,110 @@ def test_delete_transaction_success(db_session: Session) -> None:
     with pytest.raises(HTTPException) as exc_info:
         transaction_service.get_transaction(db_session, "user-1", created.id)
     assert exc_info.value.status_code == 404
+
+
+def test_bulk_create_transactions_success(db_session: Session) -> None:
+    """Bulk create persists all items when all subcategories/hangouts are owned."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    body = TransactionBulkCreate(
+        transactions=[
+            TransactionCreate(
+                subcategory_id=sub.id,
+                value=10,
+                description="A",
+                date=date(2025, 1, 1),
+                hangout_id=None,
+            ),
+            TransactionCreate(
+                subcategory_id=sub.id,
+                value=20,
+                description="B",
+                date=date(2025, 1, 2),
+                hangout_id=None,
+            ),
+        ]
+    )
+    result = transaction_service.bulk_create_transactions(db_session, "user-1", body)
+    assert len(result) == 2
+    assert result[0].value == 10 and result[0].description == "A"
+    assert result[1].value == 20 and result[1].description == "B"
+    assert result[0].subcategory_id == sub.id and result[1].subcategory_id == sub.id
+    list_all = transaction_service.list_transactions(db_session, "user-1")
+    assert len(list_all) == 2
+
+
+def test_bulk_create_transactions_404_when_subcategory_not_owned(
+    db_session: Session,
+) -> None:
+    """Bulk create returns 404 when an item references a subcategory not owned by user."""
+    cat_other = _make_category(db_session, "user-other")
+    sub_other = _make_subcategory(db_session, "user-other", cat_other.id)
+    body = TransactionBulkCreate(
+        transactions=[
+            TransactionCreate(
+                subcategory_id=sub_other.id,
+                value=1,
+                description="x",
+                date=date(2025, 1, 1),
+                hangout_id=None,
+            ),
+        ]
+    )
+    with pytest.raises(HTTPException) as exc_info:
+        transaction_service.bulk_create_transactions(db_session, "user-1", body)
+    assert exc_info.value.status_code == 404
+    assert len(transaction_service.list_transactions(db_session, "user-1")) == 0
+
+
+def test_bulk_create_transactions_404_when_hangout_not_owned(db_session: Session) -> None:
+    """Bulk create returns 404 when an item references a hangout not owned by user."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    hang_other = _make_hangout(db_session, "user-other")
+    body = TransactionBulkCreate(
+        transactions=[
+            TransactionCreate(
+                subcategory_id=sub.id,
+                value=1,
+                description="x",
+                date=date(2025, 1, 1),
+                hangout_id=hang_other.id,
+            ),
+        ]
+    )
+    with pytest.raises(HTTPException) as exc_info:
+        transaction_service.bulk_create_transactions(db_session, "user-1", body)
+    assert exc_info.value.status_code == 404
+    assert len(transaction_service.list_transactions(db_session, "user-1")) == 0
+
+
+def test_bulk_create_transactions_all_or_nothing(db_session: Session) -> None:
+    """Bulk create creates no rows when a later item fails ownership (404 before any insert)."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    cat_other = _make_category(db_session, "user-other")
+    sub_other = _make_subcategory(db_session, "user-other", cat_other.id)
+    body = TransactionBulkCreate(
+        transactions=[
+            TransactionCreate(
+                subcategory_id=sub.id,
+                value=10,
+                description="OK",
+                date=date(2025, 1, 1),
+                hangout_id=None,
+            ),
+            TransactionCreate(
+                subcategory_id=sub_other.id,
+                value=20,
+                description="Bad",
+                date=date(2025, 1, 2),
+                hangout_id=None,
+            ),
+        ]
+    )
+    with pytest.raises(HTTPException) as exc_info:
+        transaction_service.bulk_create_transactions(db_session, "user-1", body)
+    assert exc_info.value.status_code == 404
+    list_user1 = transaction_service.list_transactions(db_session, "user-1")
+    assert len(list_user1) == 0
