@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 15 — Transaction manager import/export (complete)
+Phase 16 — Finance expansion tests & handoff (complete)
 
 ## Last Task Completed
 
-Phase 15: POST /transaction-manager/import (TransactionImportRequest → TransactionImportPreview), GET /transaction-manager/export (query filters → text/csv, oldest to newest); §1.3 tests.
+Phase 16: Dedicated test DB (SQLite or TEST_DATABASE_URL), §1.3 import/export mapping, OpenAPI contract test, Robot dashboard/export, docs.
 
 ## Next Task
 
-Phase 16: Finance expansion tests & handoff — tests, robot coverage where practical, FE contract verification.
+None (finance expansion complete). Next roadmap phase or backlog item as needed.
 
 ## Key Decisions
 

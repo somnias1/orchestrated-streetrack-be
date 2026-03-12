@@ -112,3 +112,22 @@ Protected endpoint without token returns 401
     Create Session    api    ${BASE_URL}
     ${r}=    GET On Session    api    /categories/    expected_status=any
     Status Should Be    401    ${r}
+
+Dashboard balance returns 200 when AUTH_TOKEN set
+    ${token}=    Get Environment Variable    AUTH_TOKEN    default=
+    Run Keyword If    '${token}' == ''    Pass Execution    AUTH_TOKEN not set - skipping protected test
+    Create Session    api    ${BASE_URL}
+    ${headers}=    Create Dictionary    Authorization=Bearer ${token}
+    ${r}=    GET On Session    api    /dashboard/balance    headers=${headers}
+    Status Should Be    200    ${r}
+    Dictionary Should Contain Key    ${r.json()}    balance
+
+Transaction manager export returns 200 when AUTH_TOKEN set
+    ${token}=    Get Environment Variable    AUTH_TOKEN    default=
+    Run Keyword If    '${token}' == ''    Pass Execution    AUTH_TOKEN not set - skipping protected test
+    Create Session    api    ${BASE_URL}
+    ${headers}=    Create Dictionary    Authorization=Bearer ${token}
+    ${r}=    GET On Session    api    /transaction-manager/export    headers=${headers}
+    Status Should Be    200    ${r}
+    # Response is text/csv
+    Should Contain    ${r.headers}[Content-Type]    text/csv

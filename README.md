@@ -98,8 +98,9 @@ uv run pytest && uv run robot tests/robot && uv run ruff check .
 | `AUTH0_AUDIENCE` | No | API audience |
 | `AUTH0_ISSUER` | No | Token issuer |
 | `CORS_ALLOWED_ORIGINS` | No | Comma-separated origins (default `http://localhost:3000`) |
+| `TEST_DATABASE_URL` | No | Dedicated DB for pytest; if unset, tests use in-memory SQLite (production DB is never touched). |
 
-See `.env.example` for a template.
+See `.env.example` for a template. **Tests** use a dedicated test DB (default: in-memory SQLite via `conftest`); set `TEST_DATABASE_URL` for a Postgres test DB.
 
 ## Key decisions
 

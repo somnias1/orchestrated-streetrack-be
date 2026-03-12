@@ -55,7 +55,7 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 | Periodic expenses: is_periodic, due_day validation; type consistency | pytest | tests/unit/test_services_subcategory.py::test_create_subcategory_periodic_with_due_day_success, test_create_subcategory_periodic_without_due_day_raises_422, test_create_subcategory_type_mismatch_raises_422; tests/unit/test_services_dashboard.py (due-status: paid when transaction in month) |
 | Dashboard: cumulative balance, month balance, due periodic expenses | pytest | tests/unit/test_services_dashboard.py (get_cumulative_balance*, get_month_balance*, get_due_periodic_expenses*); tests/integration/test_dashboard_api.py |
 | Bulk transactions: normalized-ID batch, ownership check, all-or-nothing | pytest | tests/unit/test_services_transaction.py (test_bulk_create_transactions_*), tests/integration/test_transactions_api.py (test_bulk_create_transactions_*) |
-| Import/export: import preview vs existing pairs; export date-filtered CSV | pytest | TBD Phase 15/16 |
+| Import/export: import preview vs existing pairs; export date-filtered CSV | pytest | tests/unit/test_services_transaction_manager.py (test_preview_import_*, test_export_transactions_csv_*); tests/integration/test_transaction_manager_api.py |
 
 ### 1.4 Out of Scope (current)
 

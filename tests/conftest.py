@@ -1,15 +1,18 @@
 """
 Pytest fixtures for unit and integration tests.
 §6.4: conftest for get_db override, auth override, TestClient.
+Phase 16: tests use a dedicated test DB (SQLite or TEST_DATABASE_URL); real DB is never touched.
 """
 
 from __future__ import annotations
 
+import os
 from collections.abc import Generator
 
 import pytest
 from app.auth import get_current_user_id
-from app.db.base import get_engine, session_factory
+from app.db.base import Base, session_factory
+from app.db.session import get_db
 from app.main import app
 from app.models.category import Category
 from app.models.hangout import Hangout
@@ -17,21 +20,55 @@ from app.models.subcategory import Subcategory
 from app.models.transaction import Transaction
 from fastapi import Request
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import create_engine, delete
+
+
+def _test_database_url() -> str:
+    """URL for test database: TEST_DATABASE_URL or in-memory SQLite (no real DB)."""
+    explicit = os.environ.get("TEST_DATABASE_URL")
+    if explicit:
+        return explicit
+    return "sqlite:///:memory:"
 
 
 @pytest.fixture(scope="session")
-def engine():
-    """Session-scoped engine (uses DATABASE_URL)."""
-    return get_engine()
+def test_engine():
+    """Session-scoped test DB (TEST_DATABASE_URL or SQLite); never production."""
+    url = _test_database_url()
+    opts = {}
+    if url.startswith("sqlite"):
+        opts["connect_args"] = {"check_same_thread": False}
+    engine = create_engine(
+        url,
+        pool_pre_ping=not url.startswith("sqlite"),
+        **opts,
+    )
+    Base.metadata.create_all(engine)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _override_get_db_for_tests(test_engine):
+    """Override get_db so all tests use the test engine; real DB is never used."""
+    def get_db_override(request: Request) -> Generator:
+        session_factory_instance = session_factory(test_engine)
+        session = session_factory_instance()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    app.dependency_overrides[get_db] = get_db_override
+    yield
+    app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.fixture
-def db_session(engine) -> Generator:
-    """DB session for unit tests; tables cleaned at start, session closed at end."""
-    session_factory_instance = session_factory(engine)
+def db_session(test_engine) -> Generator:
+    """DB session for unit tests; tables cleaned at start, session closed at end (test DB only)."""
+    session_factory_instance = session_factory(test_engine)
     session = session_factory_instance()
-    # Clean state so each test starts with empty tables
     session.execute(delete(Transaction))
     session.execute(delete(Hangout))
     session.execute(delete(Subcategory))
@@ -42,9 +79,9 @@ def db_session(engine) -> Generator:
 
 
 @pytest.fixture
-def clean_db(engine) -> Generator:
-    """Truncate CRUD tables before test (for integration tests that need clean state)."""
-    session_factory_instance = session_factory(engine)
+def clean_db(test_engine) -> Generator:
+    """Clear CRUD tables before test (integration tests; test DB only)."""
+    session_factory_instance = session_factory(test_engine)
     session = session_factory_instance()
     session.execute(delete(Transaction))
     session.execute(delete(Hangout))
@@ -53,6 +90,8 @@ def clean_db(engine) -> Generator:
     session.commit()
     session.close()
     yield
+
+
 
 
 def _override_get_current_user_id(request: Request) -> str:
@@ -70,8 +109,8 @@ def _override_get_current_user_id(request: Request) -> str:
 
 
 @pytest.fixture
-def client() -> Generator[TestClient]:
-    """TestClient with auth overridden: X-Test-User-Id header → user_id; no header → 401."""
+def client(clean_db: None) -> Generator[TestClient]:
+    """TestClient with auth overridden; clean_db runs first for tests that need it."""
     app.dependency_overrides[get_current_user_id] = _override_get_current_user_id
     with TestClient(app) as c:
         yield c
