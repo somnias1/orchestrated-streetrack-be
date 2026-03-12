@@ -25,5 +25,8 @@ class Category(Base):
     is_income: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     subcategories: Mapped[list["Subcategory"]] = relationship(  # noqa: UP037
-        "Subcategory", back_populates="category", cascade="all, delete-orphan"
+        "Subcategory",
+        back_populates="category",
+        cascade="save-update, merge",
+        passive_deletes=True,
     )
