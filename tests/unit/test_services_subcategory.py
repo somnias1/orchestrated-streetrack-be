@@ -5,11 +5,15 @@ periodic expenses (is_periodic, due_day validation, type consistency).
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from app.schemas.category import CategoryCreate
 from app.schemas.subcategory import SubcategoryCreate, SubcategoryUpdate
+from app.schemas.transaction import TransactionCreate
 from app.services import category as category_service
 from app.services import subcategory as subcategory_service
+from app.services import transaction as transaction_service
 from fastapi import HTTPException
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -221,6 +225,33 @@ def test_delete_subcategory_success(db_session: Session) -> None:
     with pytest.raises(HTTPException) as exc_info:
         subcategory_service.get_subcategory(db_session, "user-1", created.id)
     assert exc_info.value.status_code == 404
+
+
+def test_delete_subcategory_409_when_has_transactions(db_session: Session) -> None:
+    """Delete raises 409 when subcategory has transactions."""
+    cat = _make_category(db_session, "user-1")
+    created = subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat.id, name="WithTx", description=None, belongs_to_income=False
+        ),
+    )
+    transaction_service.create_transaction(
+        db_session,
+        "user-1",
+        TransactionCreate(
+            subcategory_id=created.id,
+            value=-10,
+            description="Test",
+            date=date(2025, 3, 1),
+            hangout_id=None,
+        ),
+    )
+    with pytest.raises(HTTPException) as exc_info:
+        subcategory_service.delete_subcategory(db_session, "user-1", created.id)
+    assert exc_info.value.status_code == 409
+    assert "transactions" in exc_info.value.detail.lower()
 
 
 def test_create_subcategory_periodic_with_due_day_success(db_session: Session) -> None:

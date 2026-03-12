@@ -22,7 +22,7 @@ class Subcategory(Base):
     )
     category_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey("categories.id", ondelete="CASCADE"),
+        ForeignKey("categories.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
@@ -35,5 +35,8 @@ class Subcategory(Base):
 
     category: Mapped["Category"] = relationship("Category", back_populates="subcategories")  # noqa: UP037
     transactions: Mapped[list["Transaction"]] = relationship(  # noqa: UP037
-        "Transaction", back_populates="subcategory", cascade="all, delete-orphan"
+        "Transaction",
+        back_populates="subcategory",
+        cascade="save-update, merge",
+        passive_deletes=True,
     )

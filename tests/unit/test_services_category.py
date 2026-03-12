@@ -8,7 +8,9 @@ import uuid
 
 import pytest
 from app.schemas.category import CategoryCreate, CategoryUpdate
+from app.schemas.subcategory import SubcategoryCreate
 from app.services import category as category_service
+from app.services import subcategory as subcategory_service
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -142,3 +144,21 @@ def test_delete_category_404_when_not_owned(db_session: Session) -> None:
     with pytest.raises(HTTPException) as exc_info:
         category_service.delete_category(db_session, "user-other", created.id)
     assert exc_info.value.status_code == 404
+
+
+def test_delete_category_409_when_has_subcategories(db_session: Session) -> None:
+    """Delete raises 409 when category has subcategories."""
+    created = category_service.create_category(
+        db_session, "user-1", CategoryCreate(name="Parent", description=None, is_income=False)
+    )
+    subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=created.id, name="Child", description=None, belongs_to_income=False
+        ),
+    )
+    with pytest.raises(HTTPException) as exc_info:
+        category_service.delete_category(db_session, "user-1", created.id)
+    assert exc_info.value.status_code == 409
+    assert "subcategories" in exc_info.value.detail.lower()

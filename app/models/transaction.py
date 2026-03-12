@@ -23,7 +23,7 @@ class Transaction(Base):
     )
     subcategory_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey("subcategories.id", ondelete="CASCADE"),
+        ForeignKey("subcategories.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )

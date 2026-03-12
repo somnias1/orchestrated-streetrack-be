@@ -6,10 +6,12 @@ import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.category import Category
 from app.models.subcategory import Subcategory
+from app.models.transaction import Transaction
 from app.schemas.subcategory import SubcategoryCreate, SubcategoryRead, SubcategoryUpdate
 
 
@@ -161,12 +163,32 @@ def update_subcategory(
 
 
 def delete_subcategory(db: Session, user_id: str, subcategory_id: uuid.UUID) -> None:
-    """Delete subcategory if owned; else 404."""
+    """Delete subcategory if owned; else 404. Fails with 409 if it has transactions."""
     row = db.get(Subcategory, subcategory_id)
     if row is None or row.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subcategory not found",
         )
-    db.delete(row)
-    db.commit()
+    has_transactions = (
+        db.execute(
+            select(Transaction).where(Transaction.subcategory_id == subcategory_id).limit(1)
+        )
+        .scalars()
+        .first()
+        is not None
+    )
+    if has_transactions:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete subcategory: it has transactions. Remove or reassign them first.",
+        )
+    try:
+        db.delete(row)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete subcategory: it has transactions. Remove or reassign them first.",
+        ) from None
