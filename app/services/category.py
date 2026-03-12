@@ -6,9 +6,11 @@ import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.category import Category
+from app.models.subcategory import Subcategory
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 
 
@@ -78,12 +80,30 @@ def update_category(
 
 
 def delete_category(db: Session, user_id: str, category_id: uuid.UUID) -> None:
-    """Delete category if owned; else 404."""
+    """Delete category if owned; else 404. Fails with 409 if it has subcategories."""
     row = db.get(Category, category_id)
     if row is None or row.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found",
         )
-    db.delete(row)
-    db.commit()
+    has_subcategories = (
+        db.execute(select(Subcategory).where(Subcategory.category_id == category_id).limit(1))
+        .scalars()
+        .first()
+        is not None
+    )
+    if has_subcategories:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete category: it has subcategories. Remove or reassign them first.",
+        )
+    try:
+        db.delete(row)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete category: it has subcategories. Remove or reassign them first.",
+        ) from None
