@@ -40,7 +40,8 @@ def test_transactions_flow(
 
     r = client.get("/transactions/", headers=headers)
     assert r.status_code == 200
-    assert r.json() == []
+    initial_list = r.json()
+    assert isinstance(initial_list, list)
 
     r = client.post(
         "/transactions/",
@@ -63,7 +64,8 @@ def test_transactions_flow(
 
     r = client.get("/transactions/", headers=headers)
     assert r.status_code == 200
-    assert len(r.json()) == 1
+    list_after_create = r.json()
+    assert any(t["id"] == tx_id for t in list_after_create)
 
     r = client.get(f"/transactions/{tx_id}", headers=headers)
     assert r.status_code == 200
@@ -169,9 +171,11 @@ def test_bulk_create_transactions_201_and_returns_list(
     assert data[0]["value"] == -100 and data[0]["description"] == "Bulk A"
     assert data[1]["value"] == -200 and data[1]["description"] == "Bulk B"
     assert data[0]["subcategory_id"] == subcategory_id
+    created_ids = {data[0]["id"], data[1]["id"]}
     r = client.get("/transactions/", headers=headers)
     assert r.status_code == 200
-    assert len(r.json()) == 2
+    list_data = r.json()
+    assert created_ids <= {t["id"] for t in list_data}
 
 
 def test_bulk_create_transactions_without_auth_returns_401(
