@@ -39,3 +39,13 @@
 ## Known issues / follow-ups
 
 - None. Phase 16 will extend the §1.3 mapping table and add any further Robot/coverage for the finance expansion.
+
+---
+
+## Post-merge update (FK RESTRICT / back propagation)
+
+- **ORM & DB:** Category→Subcategory and Subcategory→Transaction foreign keys changed from `ondelete="CASCADE"` to `ondelete="RESTRICT"`. Relationship cascades changed from `cascade="all, delete-orphan"` to `cascade="save-update, merge"` with `passive_deletes=True` so deletes are not propagated; the DB enforces referential integrity.
+- **Migration:** `alembic/versions/b1c4e8f2a0d3_fk_restrict_category_subcategory.py` — upgrades both FKs to RESTRICT; downgrade restores CASCADE.
+- **API behavior:** Delete category returns **409 Conflict** when the category has subcategories; delete subcategory returns **409 Conflict** when it has transactions. Detail messages direct the client to remove or reassign children first. Services check for children before delete and catch `IntegrityError` as a fallback.
+- **Tests:** `test_delete_category_409_when_has_subcategories`, `test_delete_subcategory_409_when_has_transactions` (unit).
+- **Files changed:** `app/models/category.py`, `app/models/subcategory.py`, `app/models/transaction.py`, `app/services/category.py`, `app/services/subcategory.py`, `tests/unit/test_services_category.py`, `tests/unit/test_services_subcategory.py`, new migration.
