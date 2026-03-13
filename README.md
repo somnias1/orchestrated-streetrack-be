@@ -31,11 +31,14 @@ uv run uvicorn app.main:app --reload
 
 ## Migrations
 
-Migrations are managed with **Alembic**. URL is taken from `DATABASE_URL` (via `app.db.config.Settings`); no URL in `alembic.ini`.
+Migrations are managed with **Alembic**. The same migration files apply to **both** the main DB and the test DB; you choose which database is migrated by which URL is in the environment when you run the command.
 
-### Apply migrations
+- **Main DB:** set `DATABASE_URL` in `.env` to your main PostgreSQL, then run `uv run alembic upgrade head`. That applies all migrations to the main DB.
+- **Test DB:** set `TEST_DATABASE_URL` in `.env` to a separate Postgres DB (e.g. `streetrack_test`). When you run pytest, the test harness runs `alembic upgrade head` against that URL at session start, so the test DB is kept in sync. You can also apply migrations to the test DB manually with `DATABASE_URL=$TEST_DATABASE_URL uv run alembic upgrade head` (or the Windows equivalent).
 
-Ensure `DATABASE_URL` in `.env` points at your PostgreSQL database, then:
+### Apply migrations (main DB)
+
+Ensure `DATABASE_URL` in `.env` points at your main PostgreSQL database, then:
 
 ```bash
 uv run alembic upgrade head
@@ -98,9 +101,9 @@ uv run pytest && uv run robot tests/robot && uv run ruff check .
 | `AUTH0_AUDIENCE` | No | API audience |
 | `AUTH0_ISSUER` | No | Token issuer |
 | `CORS_ALLOWED_ORIGINS` | No | Comma-separated origins (default `http://localhost:3000`) |
-| `TEST_DATABASE_URL` | No | Dedicated DB for pytest; if unset, tests use in-memory SQLite (production DB is never touched). |
+| `TEST_DATABASE_URL` | Yes (for pytest) | Dedicated PostgreSQL DB for tests (e.g. `postgresql://user:pass@localhost:5432/streetrack_test`). Same migrations apply; test DB is migrated at pytest session start. |
 
-See `.env.example` for a template. **Tests** use a dedicated test DB (default: in-memory SQLite via `conftest`); set `TEST_DATABASE_URL` for a Postgres test DB.
+See `.env.example` for a template. **Tests** require a separate Postgres test DB; they never use `DATABASE_URL`. Create the test DB (e.g. `streetrack_test`) and set `TEST_DATABASE_URL`; pytest will run migrations against it when the session starts.
 
 ## Key decisions
 
