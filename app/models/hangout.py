@@ -5,8 +5,8 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import Uuid
 
 from app.db.base import Base
 
@@ -17,9 +17,7 @@ if TYPE_CHECKING:
 class Hangout(Base):
     __tablename__ = "hangouts"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description = mapped_column(String(1024), nullable=True)
     date: Mapped[date] = mapped_column(Date, nullable=False)

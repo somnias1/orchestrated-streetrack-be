@@ -5,8 +5,8 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import Uuid
 
 from app.db.base import Base
 
@@ -18,11 +18,9 @@ if TYPE_CHECKING:
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     subcategory_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey("subcategories.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
@@ -31,7 +29,7 @@ class Transaction(Base):
     description: Mapped[str] = mapped_column(String(1024), nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False)
     hangout_id = mapped_column(
-        Uuid(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey("hangouts.id", ondelete="SET NULL"),
         nullable=True,
         index=True,

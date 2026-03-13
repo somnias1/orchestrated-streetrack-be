@@ -1,7 +1,8 @@
 """
 Pytest fixtures for unit and integration tests.
 §6.4: conftest for get_db override, auth override, TestClient.
-Phase 16: tests use a dedicated test DB (SQLite or TEST_DATABASE_URL); real DB is never touched.
+Phase 16: tests use a dedicated Postgres test DB (TEST_DATABASE_URL); real DB is never touched.
+Same migration files apply to both DBs; test DB is migrated at session start.
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from collections.abc import Generator
 
 import pytest
 from app.auth import get_current_user_id
-from app.db.base import Base, session_factory
+from app.db.base import session_factory
 from app.db.session import get_db
 from app.main import app
 from app.models.category import Category
@@ -24,26 +25,41 @@ from sqlalchemy import create_engine, delete
 
 
 def _test_database_url() -> str:
-    """URL for test database: TEST_DATABASE_URL or in-memory SQLite (no real DB)."""
-    explicit = os.environ.get("TEST_DATABASE_URL")
-    if explicit:
-        return explicit
-    return "sqlite:///:memory:"
+    """Postgres URL for test DB; read from Settings (loads .env) so .env is the source of truth."""
+    from app.db.config import Settings
+
+    url = (Settings().test_database_url or "").strip()
+    if not url or not url.lower().startswith("postgresql"):
+        pytest.skip(
+            "TEST_DATABASE_URL must be a Postgres URL (e.g. postgresql://.../streetrack_test). "
+            "Same migrations apply to main and test DB."
+        )
+    return url
+
+
+def _run_migrations_against(url: str) -> None:
+    """Run Alembic migrations against the given URL (same files as main DB)."""
+    from alembic import command
+    from alembic.config import Config
+
+    old = os.environ.get("DATABASE_URL")
+    os.environ["DATABASE_URL"] = url
+    try:
+        cfg = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
+        command.upgrade(cfg, "head")
+    finally:
+        if old is not None:
+            os.environ["DATABASE_URL"] = old
+        else:
+            os.environ.pop("DATABASE_URL", None)
 
 
 @pytest.fixture(scope="session")
 def test_engine():
-    """Session-scoped test DB (TEST_DATABASE_URL or SQLite); never production."""
+    """Session-scoped Postgres test DB (TEST_DATABASE_URL). Migrations run at session start."""
     url = _test_database_url()
-    opts = {}
-    if url.startswith("sqlite"):
-        opts["connect_args"] = {"check_same_thread": False}
-    engine = create_engine(
-        url,
-        pool_pre_ping=not url.startswith("sqlite"),
-        **opts,
-    )
-    Base.metadata.create_all(engine)
+    _run_migrations_against(url)
+    engine = create_engine(url, pool_pre_ping=True)
     yield engine
     engine.dispose()
 
@@ -51,6 +67,7 @@ def test_engine():
 @pytest.fixture(scope="session", autouse=True)
 def _override_get_db_for_tests(test_engine):
     """Override get_db so all tests use the test engine; real DB is never used."""
+
     def get_db_override(request: Request) -> Generator:
         session_factory_instance = session_factory(test_engine)
         session = session_factory_instance()
@@ -90,8 +107,6 @@ def clean_db(test_engine) -> Generator:
     session.commit()
     session.close()
     yield
-
-
 
 
 def _override_get_current_user_id(request: Request) -> str:

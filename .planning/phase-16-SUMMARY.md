@@ -35,5 +35,14 @@
 
 ## Known issues / follow-ups
 
-- With default in-memory SQLite and session-scoped engine, integration tests share DB state; a few tests were relaxed (assert created resources in list rather than exact counts). For strict per-test isolation, set `TEST_DATABASE_URL` to a dedicated Postgres and/or run tests with a fresh DB per run.
+- With a dedicated Postgres test DB and session-scoped engine, integration tests share DB state; a few tests were relaxed (assert created resources in list rather than exact counts). For strict per-test isolation, use a fresh DB per run or isolate test data.
 - Alembic migrations still use PostgreSQL UUID in generated scripts; no change required for existing deployments.
+
+---
+
+## Extension: Postgres-only test DB and config (branch `feature/phase-16-postgres-test-db`)
+
+- **Postgres-only ORM**: Reverted to `sqlalchemy.dialects.postgresql.UUID` in all models; tests use a separate Postgres DB (no SQLite).
+- **Test DB from Settings**: `app/db/config.py` now has `test_database_url` (env `TEST_DATABASE_URL`). Conftest reads the URL via `Settings()` so `.env` is the single source of truth; tests no longer read `os.environ` directly.
+- **Migrations for test DB**: Conftest runs `alembic upgrade head` against the test DB URL at session start, so the same migration files apply to both main and test DB.
+- **Docs**: README explains how migrations apply to main vs test DB; `.env.example` documents required `TEST_DATABASE_URL` for pytest.
