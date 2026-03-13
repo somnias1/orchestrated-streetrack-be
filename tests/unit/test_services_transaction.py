@@ -148,9 +148,7 @@ def test_list_transactions_filter_by_date_tree(db_session: Session) -> None:
     assert len(by_year) == 1 and by_year[0].description == "2025"
     by_month = transaction_service.list_transactions(db_session, "user-1", month=3)
     assert len(by_month) == 2
-    by_year_month = transaction_service.list_transactions(
-        db_session, "user-1", year=2025, month=3
-    )
+    by_year_month = transaction_service.list_transactions(db_session, "user-1", year=2025, month=3)
     assert len(by_year_month) == 1 and by_year_month[0].description == "2025"
     by_day = transaction_service.list_transactions(db_session, "user-1", year=2025, month=3, day=15)
     assert len(by_day) == 1 and by_day[0].date == date(2025, 3, 15)
@@ -189,9 +187,7 @@ def test_list_transactions_filter_by_subcategory_id(db_session: Session) -> None
             hangout_id=None,
         ),
     )
-    by_sub1 = transaction_service.list_transactions(
-        db_session, "user-1", subcategory_id=sub1.id
-    )
+    by_sub1 = transaction_service.list_transactions(db_session, "user-1", subcategory_id=sub1.id)
     assert len(by_sub1) == 1 and by_sub1[0].subcategory_id == sub1.id and by_sub1[0].value == 10
 
 

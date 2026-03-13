@@ -65,16 +65,12 @@ def list_transactions(
         stmt = stmt.where(Transaction.subcategory_id == subcategory_id)
     if hangout_id is not None:
         stmt = stmt.where(Transaction.hangout_id == hangout_id)
-    stmt = (
-        stmt.order_by(Transaction.date.desc()).offset(skip).limit(limit)
-    )
+    stmt = stmt.order_by(Transaction.date.desc()).offset(skip).limit(limit)
     rows = db.execute(stmt).unique().scalars().all()
     return [_row_to_read(r) for r in rows]
 
 
-def get_transaction(
-    db: Session, user_id: str, transaction_id: uuid.UUID
-) -> TransactionRead:
+def get_transaction(db: Session, user_id: str, transaction_id: uuid.UUID) -> TransactionRead:
     """Return transaction if found and owned; else 404."""
     stmt = (
         select(Transaction)
@@ -93,9 +89,7 @@ def get_transaction(
     return _row_to_read(row)
 
 
-def _ensure_subcategory_owned(
-    db: Session, user_id: str, subcategory_id: uuid.UUID
-) -> None:
+def _ensure_subcategory_owned(db: Session, user_id: str, subcategory_id: uuid.UUID) -> None:
     """Raise 404 if subcategory does not exist or is not owned by user."""
     sub = db.get(Subcategory, subcategory_id)
     if sub is None or sub.user_id != user_id:
@@ -115,9 +109,7 @@ def _ensure_hangout_owned(db: Session, user_id: str, hangout_id: uuid.UUID) -> N
         )
 
 
-def create_transaction(
-    db: Session, user_id: str, body: TransactionCreate
-) -> TransactionRead:
+def create_transaction(db: Session, user_id: str, body: TransactionCreate) -> TransactionRead:
     """Create transaction; subcategory and optional hangout must be owned. Else 404."""
     _ensure_subcategory_owned(db, user_id, body.subcategory_id)
     if body.hangout_id is not None:
@@ -166,9 +158,7 @@ def update_transaction(
     return _row_to_read(row)
 
 
-def delete_transaction(
-    db: Session, user_id: str, transaction_id: uuid.UUID
-) -> None:
+def delete_transaction(db: Session, user_id: str, transaction_id: uuid.UUID) -> None:
     """Delete transaction if owned; else 404."""
     row = db.get(Transaction, transaction_id)
     if row is None or row.user_id != user_id:

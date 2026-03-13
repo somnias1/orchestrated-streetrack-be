@@ -56,13 +56,9 @@ def preview_import(
             db, user_id, row.category_name, row.subcategory_name
         )
         if subcategory_id is None:
-            invalid_rows.append(
-                (i, "Category/subcategory pair not found or not owned")
-            )
+            invalid_rows.append((i, "Category/subcategory pair not found or not owned"))
             continue
-        if row.hangout_id is not None and not _hangout_owned(
-            db, user_id, row.hangout_id
-        ):
+        if row.hangout_id is not None and not _hangout_owned(db, user_id, row.hangout_id):
             invalid_rows.append((i, "Hangout not found or not owned"))
             continue
         transactions.append(
@@ -78,8 +74,7 @@ def preview_import(
     return TransactionImportPreview(
         transactions=transactions,
         invalid_rows=[
-            TransactionImportInvalidRow(row_index=idx, message=msg)
-            for idx, msg in invalid_rows
+            TransactionImportInvalidRow(row_index=idx, message=msg) for idx, msg in invalid_rows
         ],
     )
 

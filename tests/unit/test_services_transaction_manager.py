@@ -29,9 +29,7 @@ def _make_category(db: Session, user_id: str, name: str = "Cat"):
     )
 
 
-def _make_subcategory(
-    db: Session, user_id: str, category_id: uuid.UUID, name: str = "Sub"
-):
+def _make_subcategory(db: Session, user_id: str, category_id: uuid.UUID, name: str = "Sub"):
     return subcategory_service.create_subcategory(
         db,
         user_id,
@@ -236,9 +234,7 @@ def test_export_transactions_csv_filtered_by_year(db_session: Session) -> None:
             hangout_id=None,
         ),
     )
-    csv_str = tm_service.export_transactions_csv(
-        db_session, "user-1", year=2025
-    )
+    csv_str = tm_service.export_transactions_csv(db_session, "user-1", year=2025)
     lines = csv_str.strip().split("\n")
     assert len(lines) == 2  # header + 1 row
     assert "2025" in lines[1]

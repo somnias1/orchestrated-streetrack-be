@@ -19,9 +19,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 
-def _make_category(
-    db: Session, user_id: str, name: str = "Cat", *, is_income: bool = False
-):
+def _make_category(db: Session, user_id: str, name: str = "Cat", *, is_income: bool = False):
     return category_service.create_category(
         db, user_id, CategoryCreate(name=name, description=None, is_income=is_income)
     )
@@ -109,12 +107,8 @@ def test_list_subcategories_filter_by_category_id(db_session: Session) -> None:
             category_id=cat2.id, name="Sub2", description=None, belongs_to_income=False
         ),
     )
-    by_cat1 = subcategory_service.list_subcategories(
-        db_session, "user-1", category_id=cat1.id
-    )
-    by_cat2 = subcategory_service.list_subcategories(
-        db_session, "user-1", category_id=cat2.id
-    )
+    by_cat1 = subcategory_service.list_subcategories(db_session, "user-1", category_id=cat1.id)
+    by_cat2 = subcategory_service.list_subcategories(db_session, "user-1", category_id=cat2.id)
     assert len(by_cat1) == 1 and by_cat1[0].category_id == cat1.id
     assert len(by_cat2) == 1 and by_cat2[0].category_id == cat2.id
 

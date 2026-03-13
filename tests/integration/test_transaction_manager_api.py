@@ -63,9 +63,7 @@ def test_import_preview_200_returns_payload(
     assert data["invalid_rows"] == []
 
 
-def test_import_preview_invalid_pair_invalid_rows(
-    client: TestClient, clean_db: None
-) -> None:
+def test_import_preview_invalid_pair_invalid_rows(client: TestClient, clean_db: None) -> None:
     """POST /transaction-manager/import returns invalid_rows for unknown category/subcategory."""
     headers = {"X-Test-User-Id": "test-user-tm"}
     body = {

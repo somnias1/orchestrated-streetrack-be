@@ -122,7 +122,8 @@ def update_subcategory(
             .options(joinedload(Subcategory.category))
         )
         .unique()
-        .scalars().first()
+        .scalars()
+        .first()
     )
     if row is None or row.user_id != user_id:
         raise HTTPException(
@@ -171,9 +172,7 @@ def delete_subcategory(db: Session, user_id: str, subcategory_id: uuid.UUID) -> 
             detail="Subcategory not found",
         )
     has_transactions = (
-        db.execute(
-            select(Transaction).where(Transaction.subcategory_id == subcategory_id).limit(1)
-        )
+        db.execute(select(Transaction).where(Transaction.subcategory_id == subcategory_id).limit(1))
         .scalars()
         .first()
         is not None

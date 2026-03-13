@@ -5,6 +5,7 @@ Revises: fa33b7335fb1
 Create Date: 2026-03-11
 
 """
+
 from collections.abc import Sequence
 
 from alembic import op

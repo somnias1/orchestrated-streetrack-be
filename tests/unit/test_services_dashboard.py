@@ -18,9 +18,7 @@ from sqlalchemy.orm import Session
 
 def test_get_due_periodic_expenses_empty_when_no_periodic(db_session: Session) -> None:
     """When user has no periodic subcategories, returns empty list."""
-    result = dashboard_service.get_due_periodic_expenses(
-        db_session, "user-1", year=2025, month=6
-    )
+    result = dashboard_service.get_due_periodic_expenses(db_session, "user-1", year=2025, month=6)
     assert result == []
 
 
@@ -43,9 +41,7 @@ def test_get_due_periodic_expenses_unpaid_when_no_transaction_in_month(
             due_day=5,
         ),
     )
-    result = dashboard_service.get_due_periodic_expenses(
-        db_session, "user-1", year=2025, month=6
-    )
+    result = dashboard_service.get_due_periodic_expenses(db_session, "user-1", year=2025, month=6)
     assert len(result) == 1
     assert result[0].subcategory_id == sub.id
     assert result[0].subcategory_name == "Rent"
@@ -82,9 +78,7 @@ def test_get_due_periodic_expenses_paid_when_transaction_in_month(
             date=date(2025, 6, 10),
         ),
     )
-    result = dashboard_service.get_due_periodic_expenses(
-        db_session, "user-1", year=2025, month=6
-    )
+    result = dashboard_service.get_due_periodic_expenses(db_session, "user-1", year=2025, month=6)
     assert len(result) == 1
     assert result[0].paid is True
 
@@ -116,9 +110,7 @@ def test_get_due_periodic_expenses_ignores_other_months(db_session: Session) -> 
             date=date(2025, 5, 10),
         ),
     )
-    result = dashboard_service.get_due_periodic_expenses(
-        db_session, "user-1", year=2025, month=6
-    )
+    result = dashboard_service.get_due_periodic_expenses(db_session, "user-1", year=2025, month=6)
     assert len(result) == 1
     assert result[0].paid is False
 

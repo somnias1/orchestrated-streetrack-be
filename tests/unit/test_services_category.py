@@ -47,12 +47,8 @@ def test_list_categories_filter_by_is_income(db_session: Session) -> None:
     )
     all_cats = category_service.list_categories(db_session, "user-1")
     assert len(all_cats) == 2
-    income_only = category_service.list_categories(
-        db_session, "user-1", is_income=True
-    )
-    expense_only = category_service.list_categories(
-        db_session, "user-1", is_income=False
-    )
+    income_only = category_service.list_categories(db_session, "user-1", is_income=True)
+    expense_only = category_service.list_categories(db_session, "user-1", is_income=False)
     assert len(income_only) == 1 and income_only[0].is_income is True
     assert len(expense_only) == 1 and expense_only[0].is_income is False
 

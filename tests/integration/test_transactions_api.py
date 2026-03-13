@@ -32,9 +32,7 @@ def subcategory_id(client: TestClient, clean_db: None) -> str:
     return r.json()["id"]
 
 
-def test_transactions_flow(
-    client: TestClient, clean_db: None, subcategory_id: str
-) -> None:
+def test_transactions_flow(client: TestClient, clean_db: None, subcategory_id: str) -> None:
     """List → create → list → get → update → delete."""
     headers = {"X-Test-User-Id": "test-user-tx"}
 
