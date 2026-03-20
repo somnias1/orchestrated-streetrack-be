@@ -10,9 +10,13 @@ from typing import Annotated
 
 import requests
 from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
 from app.db.config import Settings
+
+# Registers `Bearer` in OpenAPI so Swagger UI shows Authorize; does not auto-401 when missing.
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def _get_settings() -> Settings:
@@ -128,12 +132,18 @@ def get_current_user_id_impl(
 def get_current_user_id(
     request: Request,
     settings: Annotated[Settings, Depends(_get_settings)],
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(bearer_scheme)
+    ],
 ) -> str:
     """
     FastAPI dependency: validate Bearer JWT via Auth0 JWKS and return `sub` as user_id.
     Raises 401 when AUTH0_DOMAIN is unset, or when token is missing/invalid/expired.
     """
-    authorization = request.headers.get("Authorization")
+    if credentials is not None:
+        authorization = f"Bearer {credentials.credentials}"
+    else:
+        authorization = request.headers.get("Authorization")
     return get_current_user_id_impl(authorization, settings)
 
 
