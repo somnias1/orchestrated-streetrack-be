@@ -11,22 +11,24 @@ from sqlalchemy.orm import Session
 from app.auth import CurrentUserId
 from app.db.session import get_db
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.pagination import PaginatedRead
 from app.services import category as category_service
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 
-@router.get("/", response_model=list[CategoryRead])
+@router.get("/", response_model=PaginatedRead[CategoryRead])
 def list_categories(
     db: Annotated[Session, Depends(get_db)],
     user_id: CurrentUserId,
     skip: int = 0,
     limit: int = 50,
     is_income: bool | None = None,
-) -> list[CategoryRead]:
-    """List categories for the authenticated user. Optional filter by is_income."""
+    name: str | None = None,
+) -> PaginatedRead[CategoryRead]:
+    """List categories for the authenticated user. Optional filters: is_income, name (icontains)."""
     return category_service.list_categories(
-        db, user_id, skip=skip, limit=limit, is_income=is_income
+        db, user_id, skip=skip, limit=limit, is_income=is_income, name=name
     )
 
 

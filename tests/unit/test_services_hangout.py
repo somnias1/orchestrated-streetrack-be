@@ -15,9 +15,10 @@ from sqlalchemy.orm import Session
 
 
 def test_list_hangouts_empty(db_session: Session) -> None:
-    """List returns empty when user has no hangouts."""
+    """List returns empty page when user has no hangouts."""
     result = hangout_service.list_hangouts(db_session, "user-1")
-    assert result == []
+    assert result.items == []
+    assert result.total == 0
 
 
 def test_list_hangouts_scoped(db_session: Session) -> None:
@@ -28,10 +29,12 @@ def test_list_hangouts_scoped(db_session: Session) -> None:
     hangout_service.create_hangout(
         db_session, "user-b", HangoutCreate(name="B", date=date(2025, 1, 2), description=None)
     )
-    list_a = hangout_service.list_hangouts(db_session, "user-a")
-    list_b = hangout_service.list_hangouts(db_session, "user-b")
-    assert len(list_a) == 1 and list_a[0].name == "A"
-    assert len(list_b) == 1 and list_b[0].name == "B"
+    page_a = hangout_service.list_hangouts(db_session, "user-a")
+    page_b = hangout_service.list_hangouts(db_session, "user-b")
+    assert len(page_a.items) == 1 and page_a.items[0].name == "A"
+    assert page_a.total == 1
+    assert len(page_b.items) == 1 and page_b.items[0].name == "B"
+    assert page_b.total == 1
 
 
 def test_get_hangout_found(db_session: Session) -> None:
@@ -72,7 +75,25 @@ def test_create_hangout(db_session: Session) -> None:
     assert result.name == "Trip"
     assert result.user_id == "user-1"
     list_all = hangout_service.list_hangouts(db_session, "user-1")
-    assert len(list_all) == 1 and list_all[0].id == result.id
+    assert len(list_all.items) == 1 and list_all.items[0].id == result.id
+    assert list_all.total == 1
+
+
+def test_list_hangouts_filter_by_name_icontains(db_session: Session) -> None:
+    """Optional name filter matches hangout name (icontains)."""
+    hangout_service.create_hangout(
+        db_session,
+        "user-1",
+        HangoutCreate(name="Summer BBQ", date=date(2025, 7, 1), description=None),
+    )
+    hangout_service.create_hangout(
+        db_session,
+        "user-1",
+        HangoutCreate(name="Winter hike", date=date(2025, 1, 1), description=None),
+    )
+    page = hangout_service.list_hangouts(db_session, "user-1", name="bbq")
+    assert [h.name for h in page.items] == ["Summer BBQ"]
+    assert page.total == 1
 
 
 def test_update_hangout_success(db_session: Session) -> None:

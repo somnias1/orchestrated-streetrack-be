@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 16 — Finance expansion tests & handoff (complete)
+Phase 17 — Name filters + pagination envelope (complete)
 
 ## Last Task Completed
 
-Phase 16: Dedicated test DB (SQLite or TEST_DATABASE_URL), §1.3 import/export mapping, OpenAPI contract test, Robot dashboard/export, docs.
+Phase 17: Optional `name` (icontains) on categories, subcategories, hangouts list APIs; pagination envelope (`items`, `total`, `skip`, `limit`) for those lists; transactions list unchanged; pytest + Robot + ruff gate; TECHSPEC §1.3 / changelog / §8.1 updated.
 
 ## Next Task
 
-None (finance expansion complete). Next roadmap phase or backlog item as needed.
+Phase 18 per ROADMAP (`has_more`, `next_skip`) or next backlog item.
 
 ## Key Decisions
 
@@ -20,6 +20,7 @@ None (finance expansion complete). Next roadmap phase or backlog item as needed.
 - Finance expansion will use three separate Home endpoints (`/dashboard/balance`, `/dashboard/month-balance`, `/dashboard/due-periodic-expenses`) so heavier queries do not block lighter widgets in the frontend.
 - Periodic expense due-status is month-based: a periodic subcategory is considered paid for a selected month if at least one transaction exists for that subcategory in that month.
 - Import resolves existing category + subcategory pairs only and returns a normalized payload for strict bulk transaction creation.
+- Phase 17: list `name` filter uses `ILIKE '%value%'`; `name` query omitted means no name filter.
 
 ## Blockers
 

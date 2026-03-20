@@ -26,9 +26,10 @@ def _make_category(db: Session, user_id: str, name: str = "Cat", *, is_income: b
 
 
 def test_list_subcategories_empty(db_session: Session) -> None:
-    """List returns empty when user has no subcategories."""
+    """List returns empty page when user has no subcategories."""
     result = subcategory_service.list_subcategories(db_session, "user-1")
-    assert result == []
+    assert result.items == []
+    assert result.total == 0
 
 
 def test_list_subcategories_scoped(db_session: Session) -> None:
@@ -49,10 +50,14 @@ def test_list_subcategories_scoped(db_session: Session) -> None:
             category_id=cat_b.id, name="SubB", description=None, belongs_to_income=False
         ),
     )
-    list_a = subcategory_service.list_subcategories(db_session, "user-a")
-    list_b = subcategory_service.list_subcategories(db_session, "user-b")
-    assert len(list_a) == 1 and list_a[0].name == "SubA" and list_a[0].category_name == "CatA"
-    assert len(list_b) == 1 and list_b[0].name == "SubB" and list_b[0].category_name == "CatB"
+    page_a = subcategory_service.list_subcategories(db_session, "user-a")
+    page_b = subcategory_service.list_subcategories(db_session, "user-b")
+    assert len(page_a.items) == 1 and page_a.items[0].name == "SubA"
+    assert page_a.items[0].category_name == "CatA"
+    assert page_a.total == 1
+    assert len(page_b.items) == 1 and page_b.items[0].name == "SubB"
+    assert page_b.items[0].category_name == "CatB"
+    assert page_b.total == 1
 
 
 def test_list_subcategories_filter_by_belongs_to_income(db_session: Session) -> None:
@@ -85,8 +90,10 @@ def test_list_subcategories_filter_by_belongs_to_income(db_session: Session) -> 
     expense_only = subcategory_service.list_subcategories(
         db_session, "user-1", belongs_to_income=False
     )
-    assert len(income_only) == 1 and income_only[0].belongs_to_income is True
-    assert len(expense_only) == 1 and expense_only[0].belongs_to_income is False
+    assert len(income_only.items) == 1 and income_only.items[0].belongs_to_income is True
+    assert income_only.total == 1
+    assert len(expense_only.items) == 1 and expense_only.items[0].belongs_to_income is False
+    assert expense_only.total == 1
 
 
 def test_list_subcategories_filter_by_category_id(db_session: Session) -> None:
@@ -109,8 +116,32 @@ def test_list_subcategories_filter_by_category_id(db_session: Session) -> None:
     )
     by_cat1 = subcategory_service.list_subcategories(db_session, "user-1", category_id=cat1.id)
     by_cat2 = subcategory_service.list_subcategories(db_session, "user-1", category_id=cat2.id)
-    assert len(by_cat1) == 1 and by_cat1[0].category_id == cat1.id
-    assert len(by_cat2) == 1 and by_cat2[0].category_id == cat2.id
+    assert len(by_cat1.items) == 1 and by_cat1.items[0].category_id == cat1.id
+    assert by_cat1.total == 1
+    assert len(by_cat2.items) == 1 and by_cat2.items[0].category_id == cat2.id
+    assert by_cat2.total == 1
+
+
+def test_list_subcategories_filter_by_name_icontains(db_session: Session) -> None:
+    """Optional name filter matches subcategory name (icontains)."""
+    cat = _make_category(db_session, "user-1")
+    subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat.id, name="Coffee shops", description=None, belongs_to_income=False
+        ),
+    )
+    subcategory_service.create_subcategory(
+        db_session,
+        "user-1",
+        SubcategoryCreate(
+            category_id=cat.id, name="Gas", description=None, belongs_to_income=False
+        ),
+    )
+    page = subcategory_service.list_subcategories(db_session, "user-1", name="shop")
+    assert [s.name for s in page.items] == ["Coffee shops"]
+    assert page.total == 1
 
 
 def test_get_subcategory_found(db_session: Session) -> None:

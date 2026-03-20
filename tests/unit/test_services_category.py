@@ -16,9 +16,12 @@ from sqlalchemy.orm import Session
 
 
 def test_list_categories_empty(db_session: Session) -> None:
-    """List returns empty list when user has no categories."""
+    """List returns empty page when user has no categories."""
     result = category_service.list_categories(db_session, "user-1")
-    assert result == []
+    assert result.items == []
+    assert result.total == 0
+    assert result.skip == 0
+    assert result.limit == 50
 
 
 def test_list_categories_scoped(db_session: Session) -> None:
@@ -29,12 +32,13 @@ def test_list_categories_scoped(db_session: Session) -> None:
     category_service.create_category(
         db_session, "user-b", CategoryCreate(name="B", description=None, is_income=True)
     )
-    list_a = category_service.list_categories(db_session, "user-a")
-    list_b = category_service.list_categories(db_session, "user-b")
-    assert len(list_a) == 1
-    assert len(list_b) == 1
-    assert list_a[0].name == "A"
-    assert list_b[0].name == "B"
+    page_a = category_service.list_categories(db_session, "user-a")
+    page_b = category_service.list_categories(db_session, "user-b")
+    assert len(page_a.items) == 1
+    assert len(page_b.items) == 1
+    assert page_a.items[0].name == "A"
+    assert page_b.items[0].name == "B"
+    assert page_a.total == 1 and page_b.total == 1
 
 
 def test_list_categories_filter_by_is_income(db_session: Session) -> None:
@@ -46,11 +50,40 @@ def test_list_categories_filter_by_is_income(db_session: Session) -> None:
         db_session, "user-1", CategoryCreate(name="Expense", description=None, is_income=False)
     )
     all_cats = category_service.list_categories(db_session, "user-1")
-    assert len(all_cats) == 2
+    assert len(all_cats.items) == 2
+    assert all_cats.total == 2
     income_only = category_service.list_categories(db_session, "user-1", is_income=True)
     expense_only = category_service.list_categories(db_session, "user-1", is_income=False)
-    assert len(income_only) == 1 and income_only[0].is_income is True
-    assert len(expense_only) == 1 and expense_only[0].is_income is False
+    assert len(income_only.items) == 1 and income_only.items[0].is_income is True
+    assert income_only.total == 1
+    assert len(expense_only.items) == 1 and expense_only.items[0].is_income is False
+    assert expense_only.total == 1
+
+
+def test_list_categories_filter_by_name_icontains(db_session: Session) -> None:
+    """Optional name filter matches substrings case-insensitively."""
+    category_service.create_category(
+        db_session, "user-1", CategoryCreate(name="Groceries", description=None, is_income=False)
+    )
+    category_service.create_category(
+        db_session, "user-1", CategoryCreate(name="Salary", description=None, is_income=True)
+    )
+    page = category_service.list_categories(db_session, "user-1", name="cer")
+    assert [c.name for c in page.items] == ["Groceries"]
+    assert page.total == 1
+
+
+def test_list_categories_pagination_total_and_skip(db_session: Session) -> None:
+    """total counts all matches; skip/limit slice items."""
+    for n in ("A", "B", "C"):
+        category_service.create_category(
+            db_session, "user-1", CategoryCreate(name=n, description=None, is_income=False)
+        )
+    p1 = category_service.list_categories(db_session, "user-1", skip=0, limit=2)
+    assert len(p1.items) == 2 and p1.total == 3
+    p2 = category_service.list_categories(db_session, "user-1", skip=2, limit=2)
+    assert len(p2.items) == 1 and p2.total == 3
+    assert p2.skip == 2 and p2.limit == 2
 
 
 def test_get_category_found(db_session: Session) -> None:
@@ -89,8 +122,9 @@ def test_create_category(db_session: Session) -> None:
     assert result.description == "Commute"
     assert result.user_id == "user-1"
     list_all = category_service.list_categories(db_session, "user-1")
-    assert len(list_all) == 1
-    assert list_all[0].id == result.id
+    assert len(list_all.items) == 1
+    assert list_all.items[0].id == result.id
+    assert list_all.total == 1
 
 
 def test_update_category_success(db_session: Session) -> None:

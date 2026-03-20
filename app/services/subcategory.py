@@ -5,13 +5,14 @@ from __future__ import annotations
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.category import Category
 from app.models.subcategory import Subcategory
 from app.models.transaction import Transaction
+from app.schemas.pagination import PaginatedRead
 from app.schemas.subcategory import SubcategoryCreate, SubcategoryRead, SubcategoryUpdate
 
 
@@ -37,20 +38,36 @@ def list_subcategories(
     limit: int = 50,
     belongs_to_income: bool | None = None,
     category_id: uuid.UUID | None = None,
-) -> list[SubcategoryRead]:
-    """Return subcategories for user_id. Optional filters: belongs_to_income, category_id."""
+    name: str | None = None,
+) -> PaginatedRead[SubcategoryRead]:
+    """Subcategories for user_id. Filters: belongs_to_income, category_id, name (icontains)."""
+    conditions = [Subcategory.user_id == user_id]
+    if belongs_to_income is not None:
+        conditions.append(Subcategory.belongs_to_income == belongs_to_income)
+    if category_id is not None:
+        conditions.append(Subcategory.category_id == category_id)
+    if name is not None:
+        conditions.append(Subcategory.name.ilike(f"%{name}%"))
+    where_clause = and_(*conditions)
+
+    count_stmt = select(func.count()).select_from(Subcategory).where(where_clause)
+    total = int(db.execute(count_stmt).scalar_one())
+
     stmt = (
         select(Subcategory)
-        .where(Subcategory.user_id == user_id)
+        .where(where_clause)
         .options(joinedload(Subcategory.category))
+        .order_by(Subcategory.name)
+        .offset(skip)
+        .limit(limit)
     )
-    if belongs_to_income is not None:
-        stmt = stmt.where(Subcategory.belongs_to_income == belongs_to_income)
-    if category_id is not None:
-        stmt = stmt.where(Subcategory.category_id == category_id)
-    stmt = stmt.order_by(Subcategory.name).offset(skip).limit(limit)
     rows = db.execute(stmt).scalars().all()
-    return [_row_to_read(r) for r in rows]
+    return PaginatedRead(
+        items=[_row_to_read(r) for r in rows],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 def get_subcategory(db: Session, user_id: str, subcategory_id: uuid.UUID) -> SubcategoryRead:

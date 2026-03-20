@@ -11,20 +11,22 @@ from sqlalchemy.orm import Session
 from app.auth import CurrentUserId
 from app.db.session import get_db
 from app.schemas.hangout import HangoutCreate, HangoutRead, HangoutUpdate
+from app.schemas.pagination import PaginatedRead
 from app.services import hangout as hangout_service
 
 router = APIRouter(prefix="/hangouts", tags=["hangouts"])
 
 
-@router.get("/", response_model=list[HangoutRead])
+@router.get("/", response_model=PaginatedRead[HangoutRead])
 def list_hangouts(
     db: Annotated[Session, Depends(get_db)],
     user_id: CurrentUserId,
     skip: int = 0,
     limit: int = 50,
-) -> list[HangoutRead]:
-    """List hangouts for the authenticated user."""
-    return hangout_service.list_hangouts(db, user_id, skip=skip, limit=limit)
+    name: str | None = None,
+) -> PaginatedRead[HangoutRead]:
+    """List hangouts for the authenticated user. Optional name filter (icontains)."""
+    return hangout_service.list_hangouts(db, user_id, skip=skip, limit=limit, name=name)
 
 
 @router.post("/", response_model=HangoutRead, status_code=status.HTTP_201_CREATED)

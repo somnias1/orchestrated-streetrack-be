@@ -5,11 +5,12 @@ from __future__ import annotations
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.models.hangout import Hangout
 from app.schemas.hangout import HangoutCreate, HangoutRead, HangoutUpdate
+from app.schemas.pagination import PaginatedRead
 
 
 def list_hangouts(
@@ -17,17 +18,31 @@ def list_hangouts(
     user_id: str,
     skip: int = 0,
     limit: int = 50,
-) -> list[HangoutRead]:
-    """Return hangouts for user_id, ordered by date desc then name."""
+    name: str | None = None,
+) -> PaginatedRead[HangoutRead]:
+    """Hangouts for user_id, date desc then name. Optional name (icontains)."""
+    conditions = [Hangout.user_id == user_id]
+    if name is not None:
+        conditions.append(Hangout.name.ilike(f"%{name}%"))
+    where_clause = and_(*conditions)
+
+    count_stmt = select(func.count()).select_from(Hangout).where(where_clause)
+    total = int(db.execute(count_stmt).scalar_one())
+
     stmt = (
         select(Hangout)
-        .where(Hangout.user_id == user_id)
+        .where(where_clause)
         .order_by(Hangout.date.desc(), Hangout.name)
         .offset(skip)
         .limit(limit)
     )
     rows = db.execute(stmt).scalars().all()
-    return [HangoutRead.model_validate(r) for r in rows]
+    return PaginatedRead(
+        items=[HangoutRead.model_validate(r) for r in rows],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 def get_hangout(db: Session, user_id: str, hangout_id: uuid.UUID) -> HangoutRead:

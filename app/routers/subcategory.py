@@ -10,13 +10,14 @@ from sqlalchemy.orm import Session
 
 from app.auth import CurrentUserId
 from app.db.session import get_db
+from app.schemas.pagination import PaginatedRead
 from app.schemas.subcategory import SubcategoryCreate, SubcategoryRead, SubcategoryUpdate
 from app.services import subcategory as subcategory_service
 
 router = APIRouter(prefix="/subcategories", tags=["subcategories"])
 
 
-@router.get("/", response_model=list[SubcategoryRead])
+@router.get("/", response_model=PaginatedRead[SubcategoryRead])
 def list_subcategories(
     db: Annotated[Session, Depends(get_db)],
     user_id: CurrentUserId,
@@ -24,8 +25,9 @@ def list_subcategories(
     limit: int = 50,
     belongs_to_income: bool | None = None,
     category_id: uuid.UUID | None = None,
-) -> list[SubcategoryRead]:
-    """List subcategories. Optional filters: belongs_to_income, category_id."""
+    name: str | None = None,
+) -> PaginatedRead[SubcategoryRead]:
+    """List subcategories. Optional filters: belongs_to_income, category_id, name (icontains)."""
     return subcategory_service.list_subcategories(
         db,
         user_id,
@@ -33,6 +35,7 @@ def list_subcategories(
         limit=limit,
         belongs_to_income=belongs_to_income,
         category_id=category_id,
+        name=name,
     )
 
 
