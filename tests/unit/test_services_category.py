@@ -22,6 +22,8 @@ def test_list_categories_empty(db_session: Session) -> None:
     assert result.total == 0
     assert result.skip == 0
     assert result.limit == 50
+    assert result.has_more is False
+    assert result.next_skip is None
 
 
 def test_list_categories_scoped(db_session: Session) -> None:
@@ -81,9 +83,11 @@ def test_list_categories_pagination_total_and_skip(db_session: Session) -> None:
         )
     p1 = category_service.list_categories(db_session, "user-1", skip=0, limit=2)
     assert len(p1.items) == 2 and p1.total == 3
+    assert p1.has_more is True and p1.next_skip == 2
     p2 = category_service.list_categories(db_session, "user-1", skip=2, limit=2)
     assert len(p2.items) == 1 and p2.total == 3
     assert p2.skip == 2 and p2.limit == 2
+    assert p2.has_more is False and p2.next_skip is None
 
 
 def test_get_category_found(db_session: Session) -> None:

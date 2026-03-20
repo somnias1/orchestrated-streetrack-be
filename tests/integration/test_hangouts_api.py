@@ -16,6 +16,8 @@ def test_hangouts_flow(client: TestClient, clean_db: None) -> None:
     body = r.json()
     assert body["items"] == []
     assert body["total"] == 0
+    assert body["has_more"] is False
+    assert body["next_skip"] is None
 
     r = client.post(
         "/hangouts/",
@@ -32,6 +34,8 @@ def test_hangouts_flow(client: TestClient, clean_db: None) -> None:
     listed = r.json()
     assert len(listed["items"]) == 1
     assert listed["total"] == 1
+    assert listed["has_more"] is False
+    assert listed["next_skip"] is None
 
     r = client.get(f"/hangouts/{hang_id}", headers=headers)
     assert r.status_code == 200
