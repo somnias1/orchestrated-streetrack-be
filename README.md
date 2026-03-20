@@ -6,7 +6,7 @@ FastAPI, PostgreSQL, Auth0. REST API for expense tracking (categories, subcatego
 
 - Python 3.14+
 - [uv](https://docs.astral.sh/uv/) for dependencies
-- PostgreSQL (for running the app and migrations)
+- PostgreSQL: one database for the app (and Alembic), and a **separate** database for pytest (`TEST_DATABASE_URL`)
 
 ## Setup
 
