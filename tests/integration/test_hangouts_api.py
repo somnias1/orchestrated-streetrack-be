@@ -13,7 +13,9 @@ def test_hangouts_flow(client: TestClient, clean_db: None) -> None:
 
     r = client.get("/hangouts/", headers=headers)
     assert r.status_code == 200
-    assert r.json() == []
+    body = r.json()
+    assert body["items"] == []
+    assert body["total"] == 0
 
     r = client.post(
         "/hangouts/",
@@ -27,7 +29,9 @@ def test_hangouts_flow(client: TestClient, clean_db: None) -> None:
 
     r = client.get("/hangouts/", headers=headers)
     assert r.status_code == 200
-    assert len(r.json()) == 1
+    listed = r.json()
+    assert len(listed["items"]) == 1
+    assert listed["total"] == 1
 
     r = client.get(f"/hangouts/{hang_id}", headers=headers)
     assert r.status_code == 200

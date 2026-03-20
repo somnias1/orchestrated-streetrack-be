@@ -5,13 +5,14 @@ from __future__ import annotations
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.category import Category
 from app.models.subcategory import Subcategory
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.pagination import PaginatedRead
 
 
 def list_categories(
@@ -20,14 +21,33 @@ def list_categories(
     skip: int = 0,
     limit: int = 50,
     is_income: bool | None = None,
-) -> list[CategoryRead]:
-    """Return categories for user_id, ordered by name. Optional filter by is_income."""
-    stmt = select(Category).where(Category.user_id == user_id)
+    name: str | None = None,
+) -> PaginatedRead[CategoryRead]:
+    """Categories for user_id, by name. Filters: is_income, name (icontains)."""
+    conditions = [Category.user_id == user_id]
     if is_income is not None:
-        stmt = stmt.where(Category.is_income == is_income)
-    stmt = stmt.order_by(Category.name).offset(skip).limit(limit)
+        conditions.append(Category.is_income == is_income)
+    if name is not None:
+        conditions.append(Category.name.ilike(f"%{name}%"))
+    where_clause = and_(*conditions)
+
+    count_stmt = select(func.count()).select_from(Category).where(where_clause)
+    total = int(db.execute(count_stmt).scalar_one())
+
+    stmt = (
+        select(Category)
+        .where(where_clause)
+        .order_by(Category.name)
+        .offset(skip)
+        .limit(limit)
+    )
     rows = db.execute(stmt).scalars().all()
-    return [CategoryRead.model_validate(r) for r in rows]
+    return PaginatedRead(
+        items=[CategoryRead.model_validate(r) for r in rows],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 def get_category(db: Session, user_id: str, category_id: uuid.UUID) -> CategoryRead:

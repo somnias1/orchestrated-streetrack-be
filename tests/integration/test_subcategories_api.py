@@ -26,7 +26,9 @@ def test_subcategories_flow(client: TestClient, clean_db: None, category_id: str
 
     r = client.get("/subcategories/", headers=headers)
     assert r.status_code == 200
-    assert r.json() == []
+    empty = r.json()
+    assert empty["items"] == []
+    assert empty["total"] == 0
 
     r = client.post(
         "/subcategories/",
@@ -46,7 +48,9 @@ def test_subcategories_flow(client: TestClient, clean_db: None, category_id: str
 
     r = client.get("/subcategories/", headers=headers)
     assert r.status_code == 200
-    assert len(r.json()) == 1
+    listed = r.json()
+    assert len(listed["items"]) == 1
+    assert listed["total"] == 1
 
     r = client.get(f"/subcategories/{sub_id}", headers=headers)
     assert r.status_code == 200

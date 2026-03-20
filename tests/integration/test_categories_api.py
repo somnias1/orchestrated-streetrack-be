@@ -18,7 +18,11 @@ def test_categories_flow(client: TestClient, clean_db: None, auth_headers: dict[
     # List empty
     r = client.get("/categories/", headers=auth_headers)
     assert r.status_code == 200
-    assert r.json() == []
+    body = r.json()
+    assert body["items"] == []
+    assert body["total"] == 0
+    assert body["skip"] == 0
+    assert body["limit"] == 50
 
     # Create
     r = client.post(
@@ -35,8 +39,10 @@ def test_categories_flow(client: TestClient, clean_db: None, auth_headers: dict[
     # List returns one
     r = client.get("/categories/", headers=auth_headers)
     assert r.status_code == 200
-    assert len(r.json()) == 1
-    assert r.json()[0]["id"] == cat_id
+    data = r.json()
+    assert len(data["items"]) == 1
+    assert data["total"] == 1
+    assert data["items"][0]["id"] == cat_id
 
     # Get by id
     r = client.get(f"/categories/{cat_id}", headers=auth_headers)
