@@ -7,6 +7,7 @@
 
 ## Files changed
 
+- `tests/conftest.py` — `client` fixture must only `pop(get_current_user_id)`, not `dependency_overrides.clear()`, so the session-scoped test `get_db` override is not removed after each integration test (fixes order-dependent empty list on `GET /transactions/`).
 - `app/schemas/pagination.py` — new fields + `paginated_read`.
 - `app/services/category.py`, `subcategory.py`, `hangout.py` — use `paginated_read`.
 - `tests/unit/test_pagination.py` — pure helper cases.
@@ -25,4 +26,4 @@
 
 ## Known issues / follow-ups
 
-- None.
+- The conftest fix corrects a latent bug: any prior integration test using `client` cleared **all** overrides, dropping test `get_db` for subsequent tests.

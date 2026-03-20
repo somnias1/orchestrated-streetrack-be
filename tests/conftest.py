@@ -129,4 +129,4 @@ def client(clean_db: None) -> Generator[TestClient]:
     app.dependency_overrides[get_current_user_id] = _override_get_current_user_id
     with TestClient(app) as c:
         yield c
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(get_current_user_id, None)
