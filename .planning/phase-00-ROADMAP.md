@@ -20,6 +20,8 @@ Derived from TECHSPEC.md on 2026-03-09.
 | 14 | Bulk transactions | Add strict normalized-ID bulk transaction creation | Sec 1.3, Sec 4.3 | 11 |
 | 15 | Transaction manager import/export | Add import preview/validation and CSV export flows on top of stable filters and bulk create | Sec 1.3, Sec 4.3 | 11, 14 |
 | 16 | Finance expansion tests & handoff | Add tests, robot coverage where practical, and FE contract verification for the new finance APIs | Sec 1.3, Sec 6, Sec 8.3 | 11-15 |
+| 17 | Name filters + pagination envelope | Add name `icontains` filters on categories/subcategories/hangouts list endpoints and return a pagination envelope (`items`, `total`, `skip`, `limit`) | Sec 1.3, Sec 4.3 | 11, 16 |
+| 18 | Pagination convenience fields | Add server-side next-page hints (`has_more`, `next_skip`) so FE can avoid client-side calculations for enabling “next page” actions | Sec 1.3, Sec 4.3 | 17 |
 
 **Note:** Phase 10 is documentation only (no application code).
 

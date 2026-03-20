@@ -286,16 +286,18 @@ The backend **implements** the following. OpenAPI at **GET /openapi.json** is th
 
 List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). All path IDs are UUIDs. For list filtering, use optional query params rather than separate search endpoints.
 
+For list filtering by name (categories/subcategories/hangouts), use optional **`?name`** with case-insensitive substring semantics (`icontains`).
+
 | Method | Path | Request | Response | Errors |
 |--------|------|---------|----------|--------|
 | **Categories** |
-| GET | `/categories/` | query: skip?, limit?, is_income? | 200: CategoryRead[] | 401, 422 |
+| GET | `/categories/` | query: skip?, limit?, is_income?, name? | 200: PaginatedRead[CategoryRead] | 401, 422 |
 | POST | `/categories/` | body: CategoryCreate | 201: CategoryRead | 401, 422 |
 | GET | `/categories/{category_id}` | path | 200: CategoryRead | 401, 404 |
 | PATCH | `/categories/{category_id}` | path + body: CategoryUpdate | 200: CategoryRead | 401, 404, 422 |
 | DELETE | `/categories/{category_id}` | path | 204 | 401, 404 |
 | **Subcategories** |
-| GET | `/subcategories/` | query: skip?, limit?, belongs_to_income?, category_id? | 200: SubcategoryRead[] | 401, 422 |
+| GET | `/subcategories/` | query: skip?, limit?, belongs_to_income?, category_id?, name? | 200: PaginatedRead[SubcategoryRead] | 401, 422 |
 | POST | `/subcategories/` | body: SubcategoryCreate | 201: SubcategoryRead | 401, 404, 422 |
 | GET | `/subcategories/{subcategory_id}` | path | 200: SubcategoryRead | 401, 404 |
 | PATCH | `/subcategories/{subcategory_id}` | path + body: SubcategoryUpdate | 200: SubcategoryRead | 401, 404, 422 |
@@ -308,7 +310,7 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 | PATCH | `/transactions/{transaction_id}` | path + body: TransactionUpdate | 200: TransactionRead | 401, 404, 422 |
 | DELETE | `/transactions/{transaction_id}` | path | 204 | 401, 404 |
 | **Hangouts** |
-| GET | `/hangouts/` | query: skip?, limit? | 200: HangoutRead[] | 401 |
+| GET | `/hangouts/` | query: skip?, limit?, name? | 200: PaginatedRead[HangoutRead] | 401 |
 | POST | `/hangouts/` | body: HangoutCreate | 201: HangoutRead | 401, 422 |
 | GET | `/hangouts/{hangout_id}` | path | 200: HangoutRead | 401, 404 |
 | PATCH | `/hangouts/{hangout_id}` | path + body: HangoutUpdate | 200: HangoutRead | 401, 404, 422 |
@@ -320,6 +322,20 @@ List endpoints accept optional **`?skip`** and **`?limit`** (defaults 0, 50). Al
 | **Transaction manager** |
 | POST | `/transaction-manager/import` | body: TransactionImportRequest | 200: TransactionImportPreview | 401, 404, 422 |
 | GET | `/transaction-manager/export` | query: year?, month?, day?, subcategory_id?, hangout_id? | 200: text/csv | 401, 422 |
+
+#### Pagination envelope (categories/subcategories/hangouts list)
+
+List endpoints for `GET /categories/`, `GET /subcategories/`, and `GET /hangouts/` return a pagination envelope instead of a raw array.
+
+`PaginatedRead[T]` refers to the following JSON shape returned by those endpoints:
+
+- `items: list[T]` (the current page of results)
+- `total: int` (count of rows matching the active filters, ignoring `skip`/`limit`)
+- `skip: int` and `limit: int` (echo of request query params)
+- `has_more: bool` (added in Phase 18)
+- `next_skip: int | null` (added in Phase 18; the `skip` value to request the next page; `null` when `has_more=false`)
+
+`has_more` and `next_skip` are returned (Phase 18) so the frontend can decide whether there is a next page without client-side calculations.
 
 ### 4.4 Authentication
 
