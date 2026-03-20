@@ -23,6 +23,8 @@ def test_categories_flow(client: TestClient, clean_db: None, auth_headers: dict[
     assert body["total"] == 0
     assert body["skip"] == 0
     assert body["limit"] == 50
+    assert body["has_more"] is False
+    assert body["next_skip"] is None
 
     # Create
     r = client.post(
@@ -42,6 +44,8 @@ def test_categories_flow(client: TestClient, clean_db: None, auth_headers: dict[
     data = r.json()
     assert len(data["items"]) == 1
     assert data["total"] == 1
+    assert data["has_more"] is False
+    assert data["next_skip"] is None
     assert data["items"][0]["id"] == cat_id
 
     # Get by id

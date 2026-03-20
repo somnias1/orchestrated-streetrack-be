@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 17 — Name filters + pagination envelope (complete)
+Phase 18 — Pagination convenience fields (complete)
 
 ## Last Task Completed
 
-Phase 17: Optional `name` (icontains) on categories, subcategories, hangouts list APIs; pagination envelope (`items`, `total`, `skip`, `limit`) for those lists; transactions list unchanged; pytest + Robot + ruff gate; TECHSPEC §1.3 / changelog / §8.1 updated.
+Phase 18: `PaginatedRead` adds `has_more` and `next_skip` for categories, subcategories, hangouts list APIs; `paginated_read()` helper; pytest + Robot + ruff gate; TECHSPEC §1.3 / §4.3 / changelog / §8.1 updated.
 
 ## Next Task
 
-Phase 18 per ROADMAP (`has_more`, `next_skip`) or next backlog item.
+Next backlog item or Phase 19 when defined on ROADMAP.
 
 ## Key Decisions
 

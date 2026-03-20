@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models.hangout import Hangout
 from app.schemas.hangout import HangoutCreate, HangoutRead, HangoutUpdate
-from app.schemas.pagination import PaginatedRead
+from app.schemas.pagination import PaginatedRead, paginated_read
 
 
 def list_hangouts(
@@ -37,8 +37,8 @@ def list_hangouts(
         .limit(limit)
     )
     rows = db.execute(stmt).scalars().all()
-    return PaginatedRead(
-        items=[HangoutRead.model_validate(r) for r in rows],
+    return paginated_read(
+        [HangoutRead.model_validate(r) for r in rows],
         total=total,
         skip=skip,
         limit=limit,

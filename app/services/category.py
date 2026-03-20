@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.models.category import Category
 from app.models.subcategory import Subcategory
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
-from app.schemas.pagination import PaginatedRead
+from app.schemas.pagination import PaginatedRead, paginated_read
 
 
 def list_categories(
@@ -42,8 +42,8 @@ def list_categories(
         .limit(limit)
     )
     rows = db.execute(stmt).scalars().all()
-    return PaginatedRead(
-        items=[CategoryRead.model_validate(r) for r in rows],
+    return paginated_read(
+        [CategoryRead.model_validate(r) for r in rows],
         total=total,
         skip=skip,
         limit=limit,
