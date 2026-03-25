@@ -30,8 +30,8 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 - **Hangouts**: List/get/create/update/delete scoped by `user_id`; 404 when not owned.
 - **API contract**: Responses match Pydantic schemas; **422** on validation errors with `detail: ValidationError[]`.
 - **Categories/Subcategories filters**: list endpoints can filter by movement type; subcategories can also filter by `category_id`; categories, subcategories, and hangouts list endpoints can filter by `name` (case-insensitive substring).
-- **List pagination envelope**: `GET /categories/`, `GET /subcategories/`, and `GET /hangouts/` return `items`, `total`, `skip`, `limit`, `has_more`, and `next_skip` (transactions list remains a raw array).
-- **Transactions filters**: list endpoint supports date-tree filtering (`year`, `month`, `day`) plus `subcategory_id` and `hangout_id`, with newest-first default sorting.
+- **List pagination envelope**: `GET /categories/`, `GET /subcategories/`, `GET /hangouts/`, and `GET /transactions/` return `items`, `total`, `skip`, `limit`, `has_more`, and `next_skip`.
+- **Transactions filters**: list endpoint supports date-tree filtering (`year`, `month`, `day`) plus `subcategory_id` and `hangout_id`, with newest-first default sorting (same envelope as other list endpoints).
 - **Periodic expenses**: subcategories can be marked `is_periodic` with `due_day`; `due_day` is required only for periodic subcategories; category/subcategory type flags must match.
 - **Dashboard**: independent endpoints expose cumulative balance, selected-month balance, and due periodic expenses for a selected month.
 - **Bulk transactions**: normalized-ID bulk creation validates ownership first and is all-or-nothing.
@@ -53,7 +53,7 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 | Smoke + one flow per resource (status, structure) | Robot | tests/robot/smoke.robot |
 | Categories/Subcategories filters: list by type; subcategories by category_id | pytest | tests/unit/test_services_category.py::test_list_categories_filter_by_is_income, tests/unit/test_services_subcategory.py::test_list_subcategories_filter_by_belongs_to_income, test_list_subcategories_filter_by_category_id |
 | Categories/Subcategories/Hangouts: name icontains filter; paginated list envelope + has_more/next_skip | pytest | tests/unit/test_pagination.py; tests/unit/test_services_category.py (test_list_categories_filter_by_name_icontains, test_list_categories_pagination_total_and_skip); tests/unit/test_services_subcategory.py::test_list_subcategories_filter_by_name_icontains; tests/unit/test_services_hangout.py::test_list_hangouts_filter_by_name_icontains; tests/integration/test_categories_api.py, test_subcategories_api.py, test_hangouts_api.py |
-| Transactions filters: date tree, subcategory_id, hangout_id; newest-first sort | pytest | tests/unit/test_services_transaction.py::test_list_transactions_newest_first, test_list_transactions_filter_by_date_tree, test_list_transactions_filter_by_subcategory_id, test_list_transactions_filter_by_hangout_id |
+| Transactions filters + paginated list envelope | pytest | tests/unit/test_services_transaction.py::test_list_transactions_newest_first, test_list_transactions_filter_by_date_tree, test_list_transactions_filter_by_subcategory_id, test_list_transactions_filter_by_hangout_id, test_list_transactions_pagination_total_skip_and_has_more; tests/integration/test_transactions_api.py |
 | Periodic expenses: is_periodic, due_day validation; type consistency | pytest | tests/unit/test_services_subcategory.py::test_create_subcategory_periodic_with_due_day_success, test_create_subcategory_periodic_without_due_day_raises_422, test_create_subcategory_type_mismatch_raises_422; tests/unit/test_services_dashboard.py (due-status: paid when transaction in month) |
 | Dashboard: cumulative balance, month balance, due periodic expenses | pytest | tests/unit/test_services_dashboard.py (get_cumulative_balance*, get_month_balance*, get_due_periodic_expenses*); tests/integration/test_dashboard_api.py |
 | Bulk transactions: normalized-ID batch, ownership check, all-or-nothing | pytest | tests/unit/test_services_transaction.py (test_bulk_create_transactions_*), tests/integration/test_transactions_api.py (test_bulk_create_transactions_*) |
@@ -305,7 +305,7 @@ For list filtering by name (categories/subcategories/hangouts), use optional **`
 | PATCH | `/subcategories/{subcategory_id}` | path + body: SubcategoryUpdate | 200: SubcategoryRead | 401, 404, 422 |
 | DELETE | `/subcategories/{subcategory_id}` | path | 204 | 401, 404 |
 | **Transactions** |
-| GET | `/transactions/` | query: skip?, limit?, year?, month?, day?, subcategory_id?, hangout_id? | 200: TransactionRead[] | 401, 422 |
+| GET | `/transactions/` | query: skip?, limit?, year?, month?, day?, subcategory_id?, hangout_id? | 200: PaginatedRead[TransactionRead] | 401, 422 |
 | POST | `/transactions/` | body: TransactionCreate | 201: TransactionRead | 401, 404, 422 |
 | POST | `/transactions/bulk` | body: TransactionBulkCreate | 201: TransactionRead[] | 401, 404, 422 |
 | GET | `/transactions/{transaction_id}` | path | 200: TransactionRead | 401, 404 |
@@ -325,9 +325,9 @@ For list filtering by name (categories/subcategories/hangouts), use optional **`
 | POST | `/transaction-manager/import` | body: TransactionImportRequest | 200: TransactionImportPreview | 401, 404, 422 |
 | GET | `/transaction-manager/export` | query: year?, month?, day?, subcategory_id?, hangout_id? | 200: text/csv | 401, 422 |
 
-#### Pagination envelope (categories/subcategories/hangouts list)
+#### Pagination envelope (categories/subcategories/hangouts/transactions list)
 
-List endpoints for `GET /categories/`, `GET /subcategories/`, and `GET /hangouts/` return a pagination envelope instead of a raw array.
+List endpoints for `GET /categories/`, `GET /subcategories/`, `GET /hangouts/`, and `GET /transactions/` return a pagination envelope instead of a raw array.
 
 `PaginatedRead[T]` refers to the following JSON shape returned by those endpoints:
 
@@ -452,6 +452,7 @@ These fields let the frontend enable “next page” without deriving it from `t
 | 16 Finance expansion tests & handoff | §1.3, §6, §8.3 — coverage and FE contract verification |
 | 17 Name filters + pagination envelope | §1.3, §4.3 — `name` icontains; `PaginatedRead` for categories/subcategories/hangouts lists |
 | 18 Pagination convenience fields | §1.3, §4.3 — `has_more`, `next_skip` on `PaginatedRead` for those three list endpoints |
+| 19 Transactions list pagination | §1.3, §4.3 — `PaginatedRead` for `GET /transactions/` (same envelope as other lists) |
 
 (Actual phases come from `.planning/phase-00-ROADMAP.md` generated at bootstrap.)
 
@@ -479,6 +480,7 @@ These fields let the frontend enable “next page” without deriving it from `t
 
 | Date | Change |
 |------|--------|
+| 2026-03-24 | Phase 19 complete: `GET /transactions/` returns `PaginatedRead[TransactionRead]` like other list endpoints; §1.3, §4.3, §8.1, mapping, ROADMAP, planning SPEC/SUMMARY. |
 | 2026-03-19 | Phase 18 complete: `PaginatedRead` adds `has_more` and `next_skip` for categories, subcategories, hangouts list APIs; §1.3 and §8.1 mapping updated. |
 | 2026-03-19 | Phase 17 complete: optional `name` (icontains) on categories, subcategories, hangouts list endpoints; those three lists return pagination envelope (`items`, `total`, `skip`, `limit`); transactions list unchanged; §1.3 mapping updated. |
 | 2026-03-09 | Phase 11 complete: list filters (categories is_income; subcategories belongs_to_income, category_id; transactions year/month/day, subcategory_id, hangout_id) and newest-first sort; §1.3 mapping updated with test locations. |
