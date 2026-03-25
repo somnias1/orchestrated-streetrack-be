@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 18 — Pagination convenience fields (complete)
+Phase 19 — Transactions list pagination (complete)
 
 ## Last Task Completed
 
-Phase 18: `PaginatedRead` adds `has_more` and `next_skip` for categories, subcategories, hangouts list APIs; `paginated_read()` helper; pytest + Robot + ruff gate; TECHSPEC §1.3 / §4.3 / changelog / §8.1 updated.
+Phase 19: `GET /transactions/` returns `PaginatedRead[TransactionRead]` (same envelope as other list APIs); service count + `paginated_read`; tests, Robot smoke, OpenAPI contract, TECHSPEC §1.3 / §4.3 / §8.1 / changelog; ROADMAP row; `phase-19-SPEC.md` / `phase-19-SUMMARY.md`.
 
 ## Next Task
 
-Next backlog item or Phase 19 when defined on ROADMAP.
+Next backlog item or Phase 20 when defined on ROADMAP.
 
 ## Key Decisions
 
@@ -21,6 +21,7 @@ Next backlog item or Phase 19 when defined on ROADMAP.
 - Periodic expense due-status is month-based: a periodic subcategory is considered paid for a selected month if at least one transaction exists for that subcategory in that month.
 - Import resolves existing category + subcategory pairs only and returns a normalized payload for strict bulk transaction creation.
 - Phase 17: list `name` filter uses `ILIKE '%value%'`; `name` query omitted means no name filter.
+- Phase 19: `GET /transactions/` uses the same `PaginatedRead` envelope as categories/subcategories/hangouts (`items`, `total`, `skip`, `limit`, `has_more`, `next_skip`).
 
 ## Blockers
 

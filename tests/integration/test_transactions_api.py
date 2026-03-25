@@ -38,8 +38,11 @@ def test_transactions_flow(client: TestClient, clean_db: None, subcategory_id: s
 
     r = client.get("/transactions/", headers=headers)
     assert r.status_code == 200
-    initial_list = r.json()
-    assert isinstance(initial_list, list)
+    initial = r.json()
+    assert initial["items"] == []
+    assert initial["total"] == 0
+    assert initial["has_more"] is False
+    assert initial["next_skip"] is None
 
     r = client.post(
         "/transactions/",
@@ -63,7 +66,8 @@ def test_transactions_flow(client: TestClient, clean_db: None, subcategory_id: s
     r = client.get("/transactions/", headers=headers)
     assert r.status_code == 200
     list_after_create = r.json()
-    assert any(t["id"] == tx_id for t in list_after_create)
+    assert list_after_create["total"] == 1
+    assert any(t["id"] == tx_id for t in list_after_create["items"])
 
     r = client.get(f"/transactions/{tx_id}", headers=headers)
     assert r.status_code == 200
@@ -173,7 +177,7 @@ def test_bulk_create_transactions_201_and_returns_list(
     r = client.get("/transactions/", headers=headers)
     assert r.status_code == 200
     list_data = r.json()
-    assert created_ids <= {t["id"] for t in list_data}
+    assert created_ids <= {t["id"] for t in list_data["items"]}
 
 
 def test_bulk_create_transactions_without_auth_returns_401(

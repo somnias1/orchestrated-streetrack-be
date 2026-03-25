@@ -20,7 +20,8 @@ def test_openapi_exposes_finance_endpoints(client: TestClient) -> None:
     # Transaction manager
     assert "/transaction-manager/import" in paths
     assert "/transaction-manager/export" in paths
-    # Bulk transactions
+    # Transactions list (paginated) + bulk
+    assert "get" in paths["/transactions/"]
     assert "/transactions/bulk" in paths
     # Paths have get/post and expected response schemas
     assert "get" in paths["/dashboard/balance"]

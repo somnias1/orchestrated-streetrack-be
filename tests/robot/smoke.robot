@@ -101,7 +101,7 @@ Transactions flow when AUTH_TOKEN set
     ${tid}=    Set Variable    ${r.json()}[id]
     ${r}=    GET On Session    api    /transactions/    headers=${headers}
     Status Should Be    200    ${r}
-    ${length}=    Get Length    ${r.json()}
+    ${length}=    Get Length    ${r.json()}[items]
     Should Be True    ${length} >= 1
     ${r}=    GET On Session    api    /transactions/${tid}    headers=${headers}
     Status Should Be    200    ${r}
