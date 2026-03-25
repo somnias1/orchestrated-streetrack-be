@@ -17,11 +17,11 @@ Add server-side next-page hints on the existing pagination envelope for `GET /ca
 ## Implementation notes
 
 - Extend `app/schemas/pagination.py` (`PaginatedRead` and/or a small builder) so all three list services stay consistent.
-- Transactions list remains a raw array (unchanged).
+- Transactions list was intentionally unchanged in Phase 18; **Phase 19** moved it to the same envelope (see `phase-19-SPEC.md`).
 
 ## Out of scope
 
-- Cursor / keyset pagination; changing default `skip`/`limit`; transactions list shape.
+- Cursor / keyset pagination; changing default `skip`/`limit`; transactions list shape (**Phase 19** aligned `GET /transactions/` with `PaginatedRead` — see `phase-19-SPEC.md`).
 
 ## Done when
 

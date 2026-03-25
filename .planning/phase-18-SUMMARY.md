@@ -27,3 +27,4 @@
 ## Known issues / follow-ups
 
 - The conftest fix corrects a latent bug: any prior integration test using `client` cleared **all** overrides, dropping test `get_db` for subsequent tests.
+- **Phase 19** extended the same `PaginatedRead` envelope to **`GET /transactions/`** (out of scope at Phase 18). See `.planning/phase-19-SPEC.md` and `phase-19-SUMMARY.md`.

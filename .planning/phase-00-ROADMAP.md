@@ -22,6 +22,7 @@ Derived from TECHSPEC.md on 2026-03-09.
 | 16 | Finance expansion tests & handoff | Add tests, robot coverage where practical, and FE contract verification for the new finance APIs | Sec 1.3, Sec 6, Sec 8.3 | 11-15 |
 | 17 | Name filters + pagination envelope | Add name `icontains` filters on categories/subcategories/hangouts list endpoints and return a pagination envelope (`items`, `total`, `skip`, `limit`) | Sec 1.3, Sec 4.3 | 11, 16 |
 | 18 | Pagination convenience fields | Add server-side next-page hints (`has_more`, `next_skip`) so FE can avoid client-side calculations for enabling “next page” actions | Sec 1.3, Sec 4.3 | 17 |
+| 19 | Transactions list pagination | Align `GET /transactions/` with the same `PaginatedRead` envelope as other list APIs (`items`, `total`, `skip`, `limit`, `has_more`, `next_skip`); preserve filters and newest-first sort | Sec 1.3, Sec 4.3 | 18 |
 
 **Note:** Phase 10 is documentation only (no application code).
 
