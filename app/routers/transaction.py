@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import CurrentUserId
 from app.db.session import get_db
+from app.schemas.pagination import PaginatedRead
 from app.schemas.transaction import (
     TransactionBulkCreate,
     TransactionCreate,
@@ -21,7 +22,7 @@ from app.services import transaction as transaction_service
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
-@router.get("/", response_model=list[TransactionRead])
+@router.get("/", response_model=PaginatedRead[TransactionRead])
 def list_transactions(
     db: Annotated[Session, Depends(get_db)],
     user_id: CurrentUserId,
@@ -32,8 +33,8 @@ def list_transactions(
     day: int | None = Query(None, ge=1, le=31),
     subcategory_id: uuid.UUID | None = None,
     hangout_id: uuid.UUID | None = None,
-) -> list[TransactionRead]:
-    """List transactions (newest first). Optional: year, month, day, subcategory_id, hangout_id."""
+) -> PaginatedRead[TransactionRead]:
+    """List transactions (newest first) with pagination envelope. Optional date/id filters."""
     return transaction_service.list_transactions(
         db,
         user_id,

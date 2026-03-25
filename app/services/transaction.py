@@ -5,13 +5,14 @@ from __future__ import annotations
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import extract
 
 from app.models.hangout import Hangout
 from app.models.subcategory import Subcategory
 from app.models.transaction import Transaction
+from app.schemas.pagination import PaginatedRead, paginated_read
 from app.schemas.transaction import (
     TransactionBulkCreate,
     TransactionCreate,
@@ -45,29 +46,42 @@ def list_transactions(
     day: int | None = None,
     subcategory_id: uuid.UUID | None = None,
     hangout_id: uuid.UUID | None = None,
-) -> list[TransactionRead]:
-    """Return transactions for user_id, newest first. Optional date-tree and id filters."""
+) -> PaginatedRead[TransactionRead]:
+    """Paginated transactions for user_id, newest first. Optional date-tree and id filters."""
+    conditions = [Transaction.user_id == user_id]
+    if year is not None:
+        conditions.append(extract("year", Transaction.date) == year)
+    if month is not None:
+        conditions.append(extract("month", Transaction.date) == month)
+    if day is not None:
+        conditions.append(extract("day", Transaction.date) == day)
+    if subcategory_id is not None:
+        conditions.append(Transaction.subcategory_id == subcategory_id)
+    if hangout_id is not None:
+        conditions.append(Transaction.hangout_id == hangout_id)
+    where_clause = and_(*conditions)
+
+    count_stmt = select(func.count()).select_from(Transaction).where(where_clause)
+    total = int(db.execute(count_stmt).scalar_one())
+
     stmt = (
         select(Transaction)
-        .where(Transaction.user_id == user_id)
+        .where(where_clause)
         .options(
             joinedload(Transaction.subcategory),
             joinedload(Transaction.hangout),
         )
+        .order_by(Transaction.date.desc())
+        .offset(skip)
+        .limit(limit)
     )
-    if year is not None:
-        stmt = stmt.where(extract("year", Transaction.date) == year)
-    if month is not None:
-        stmt = stmt.where(extract("month", Transaction.date) == month)
-    if day is not None:
-        stmt = stmt.where(extract("day", Transaction.date) == day)
-    if subcategory_id is not None:
-        stmt = stmt.where(Transaction.subcategory_id == subcategory_id)
-    if hangout_id is not None:
-        stmt = stmt.where(Transaction.hangout_id == hangout_id)
-    stmt = stmt.order_by(Transaction.date.desc()).offset(skip).limit(limit)
     rows = db.execute(stmt).unique().scalars().all()
-    return [_row_to_read(r) for r in rows]
+    return paginated_read(
+        [_row_to_read(r) for r in rows],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 def get_transaction(db: Session, user_id: str, transaction_id: uuid.UUID) -> TransactionRead:

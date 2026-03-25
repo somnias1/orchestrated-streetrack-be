@@ -47,9 +47,12 @@ def _make_hangout(db: Session, user_id: str):
 
 
 def test_list_transactions_empty(db_session: Session) -> None:
-    """List returns empty when user has no transactions."""
+    """List returns empty page when user has no transactions."""
     result = transaction_service.list_transactions(db_session, "user-1")
-    assert result == []
+    assert result.items == []
+    assert result.total == 0
+    assert result.has_more is False
+    assert result.next_skip is None
 
 
 def test_list_transactions_scoped(db_session: Session) -> None:
@@ -82,8 +85,10 @@ def test_list_transactions_scoped(db_session: Session) -> None:
     )
     list_a = transaction_service.list_transactions(db_session, "user-a")
     list_b = transaction_service.list_transactions(db_session, "user-b")
-    assert len(list_a) == 1 and list_a[0].value == 100 and list_a[0].subcategory_name == "Sub"
-    assert len(list_b) == 1 and list_b[0].value == 200 and list_b[0].subcategory_name == "Sub"
+    assert len(list_a.items) == 1 and list_a.items[0].value == 100 and list_a.total == 1
+    assert list_a.items[0].subcategory_name == "Sub"
+    assert len(list_b.items) == 1 and list_b.items[0].value == 200 and list_b.total == 1
+    assert list_b.items[0].subcategory_name == "Sub"
 
 
 def test_list_transactions_newest_first(db_session: Session) -> None:
@@ -113,9 +118,9 @@ def test_list_transactions_newest_first(db_session: Session) -> None:
         ),
     )
     result = transaction_service.list_transactions(db_session, "user-1")
-    assert len(result) == 2
-    assert result[0].date == date(2025, 6, 1) and result[0].description == "New"
-    assert result[1].date == date(2024, 6, 1) and result[1].description == "Old"
+    assert len(result.items) == 2 and result.total == 2
+    assert result.items[0].date == date(2025, 6, 1) and result.items[0].description == "New"
+    assert result.items[1].date == date(2024, 6, 1) and result.items[1].description == "Old"
 
 
 def test_list_transactions_filter_by_date_tree(db_session: Session) -> None:
@@ -145,13 +150,13 @@ def test_list_transactions_filter_by_date_tree(db_session: Session) -> None:
         ),
     )
     by_year = transaction_service.list_transactions(db_session, "user-1", year=2025)
-    assert len(by_year) == 1 and by_year[0].description == "2025"
+    assert len(by_year.items) == 1 and by_year.total == 1 and by_year.items[0].description == "2025"
     by_month = transaction_service.list_transactions(db_session, "user-1", month=3)
-    assert len(by_month) == 2
+    assert len(by_month.items) == 2 and by_month.total == 2
     by_year_month = transaction_service.list_transactions(db_session, "user-1", year=2025, month=3)
-    assert len(by_year_month) == 1 and by_year_month[0].description == "2025"
+    assert len(by_year_month.items) == 1 and by_year_month.items[0].description == "2025"
     by_day = transaction_service.list_transactions(db_session, "user-1", year=2025, month=3, day=15)
-    assert len(by_day) == 1 and by_day[0].date == date(2025, 3, 15)
+    assert len(by_day.items) == 1 and by_day.items[0].date == date(2025, 3, 15)
 
 
 def test_list_transactions_filter_by_subcategory_id(db_session: Session) -> None:
@@ -188,7 +193,8 @@ def test_list_transactions_filter_by_subcategory_id(db_session: Session) -> None
         ),
     )
     by_sub1 = transaction_service.list_transactions(db_session, "user-1", subcategory_id=sub1.id)
-    assert len(by_sub1) == 1 and by_sub1[0].subcategory_id == sub1.id and by_sub1[0].value == 10
+    assert len(by_sub1.items) == 1 and by_sub1.total == 1
+    assert by_sub1.items[0].subcategory_id == sub1.id and by_sub1.items[0].value == 10
 
 
 def test_list_transactions_filter_by_hangout_id(db_session: Session) -> None:
@@ -233,7 +239,36 @@ def test_list_transactions_filter_by_hangout_id(db_session: Session) -> None:
         ),
     )
     by_hang1 = transaction_service.list_transactions(db_session, "user-1", hangout_id=hang1.id)
-    assert len(by_hang1) == 1 and by_hang1[0].hangout_id == hang1.id and by_hang1[0].value == 1
+    assert len(by_hang1.items) == 1 and by_hang1.total == 1
+    assert by_hang1.items[0].hangout_id == hang1.id and by_hang1.items[0].value == 1
+
+
+def test_list_transactions_pagination_total_skip_and_has_more(db_session: Session) -> None:
+    """total counts filtered rows; skip/limit slice; has_more and next_skip set."""
+    cat = _make_category(db_session, "user-1")
+    sub = _make_subcategory(db_session, "user-1", cat.id)
+    for d, desc in (
+        (date(2025, 1, 1), "A"),
+        (date(2025, 1, 2), "B"),
+        (date(2025, 1, 3), "C"),
+    ):
+        transaction_service.create_transaction(
+            db_session,
+            "user-1",
+            TransactionCreate(
+                subcategory_id=sub.id,
+                value=1,
+                description=desc,
+                date=d,
+                hangout_id=None,
+            ),
+        )
+    p1 = transaction_service.list_transactions(db_session, "user-1", skip=0, limit=2)
+    assert len(p1.items) == 2 and p1.total == 3
+    assert p1.has_more is True and p1.next_skip == 2
+    p2 = transaction_service.list_transactions(db_session, "user-1", skip=2, limit=2)
+    assert len(p2.items) == 1 and p2.total == 3
+    assert p2.has_more is False and p2.next_skip is None
 
 
 def test_get_transaction_404_when_not_owned(db_session: Session) -> None:
@@ -411,7 +446,7 @@ def test_bulk_create_transactions_success(db_session: Session) -> None:
     assert result[1].value == 20 and result[1].description == "B"
     assert result[0].subcategory_id == sub.id and result[1].subcategory_id == sub.id
     list_all = transaction_service.list_transactions(db_session, "user-1")
-    assert len(list_all) == 2
+    assert len(list_all.items) == 2 and list_all.total == 2
 
 
 def test_bulk_create_transactions_404_when_subcategory_not_owned(
@@ -434,7 +469,7 @@ def test_bulk_create_transactions_404_when_subcategory_not_owned(
     with pytest.raises(HTTPException) as exc_info:
         transaction_service.bulk_create_transactions(db_session, "user-1", body)
     assert exc_info.value.status_code == 404
-    assert len(transaction_service.list_transactions(db_session, "user-1")) == 0
+    assert transaction_service.list_transactions(db_session, "user-1").total == 0
 
 
 def test_bulk_create_transactions_404_when_hangout_not_owned(db_session: Session) -> None:
@@ -456,7 +491,7 @@ def test_bulk_create_transactions_404_when_hangout_not_owned(db_session: Session
     with pytest.raises(HTTPException) as exc_info:
         transaction_service.bulk_create_transactions(db_session, "user-1", body)
     assert exc_info.value.status_code == 404
-    assert len(transaction_service.list_transactions(db_session, "user-1")) == 0
+    assert transaction_service.list_transactions(db_session, "user-1").total == 0
 
 
 def test_bulk_create_transactions_all_or_nothing(db_session: Session) -> None:
@@ -487,4 +522,4 @@ def test_bulk_create_transactions_all_or_nothing(db_session: Session) -> None:
         transaction_service.bulk_create_transactions(db_session, "user-1", body)
     assert exc_info.value.status_code == 404
     list_user1 = transaction_service.list_transactions(db_session, "user-1")
-    assert len(list_user1) == 0
+    assert list_user1.total == 0 and list_user1.items == []
