@@ -4,6 +4,9 @@ Integration: Transaction manager API — import preview and CSV export. §1.3.
 
 from __future__ import annotations
 
+import csv
+import io
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -130,12 +133,25 @@ def test_export_returns_csv_200(
     r = client.get("/transaction-manager/export", headers=headers)
     assert r.status_code == 200
     assert "text/csv" in r.headers.get("content-type", "")
-    lines = r.text.strip().split("\n")
-    assert len(lines) >= 1
-    assert "date" in lines[0]
-    assert "subcategory_id" in lines[0]
-    if len(lines) > 1:
-        assert "2025-03-01" in lines[1] or "Export test" in lines[1]
+    rows = list(csv.reader(io.StringIO(r.text.strip())))
+    assert len(rows) >= 1
+    assert rows[0] == [
+        "date",
+        "$",
+        "value",
+        "category_name",
+        "subcategory_name",
+        "description",
+        "hangout_name",
+    ]
+    if len(rows) > 1:
+        assert rows[1][0] == "01/03/2025"
+        assert rows[1][1] == "$"
+        assert rows[1][2] == "-50"
+        assert rows[1][3] == "Food"
+        assert rows[1][4] == "Groceries"
+        assert rows[1][5] == "Export test"
+        assert rows[1][6] == ""
 
 
 def test_export_without_auth_returns_401(client: TestClient, clean_db: None) -> None:
