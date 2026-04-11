@@ -35,7 +35,7 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 - **Periodic expenses**: subcategories can be marked `is_periodic` with `due_day`; `due_day` is required only for periodic subcategories; category/subcategory type flags must match.
 - **Dashboard**: independent endpoints expose cumulative balance, selected-month balance, and due periodic expenses for a selected month.
 - **Bulk transactions**: normalized-ID bulk creation validates ownership first and is all-or-nothing.
-- **Import/export**: import validates pasted sheet rows against existing category/subcategory pairs and returns a payload ready for bulk creation; export returns date-filtered CSV ordered oldest to newest.
+- **Import/export**: import validates pasted sheet rows against existing category/subcategory pairs and returns a payload ready for bulk creation; export returns date-filtered CSV ordered oldest to newest, with dates as `dd/mm/yyyy`, a fixed `$` currency column (USD symbol only per row), then value, category name, subcategory name, description, and hangout name (see §4.3).
 
 **Test coverage mapping** (filled Phase 08; audit verifies each row):
 
@@ -57,7 +57,7 @@ Users need a **personal finance / expense-tracking** application. The **backend*
 | Periodic expenses: is_periodic, due_day validation; type consistency | pytest | tests/unit/test_services_subcategory.py::test_create_subcategory_periodic_with_due_day_success, test_create_subcategory_periodic_without_due_day_raises_422, test_create_subcategory_type_mismatch_raises_422; tests/unit/test_services_dashboard.py (due-status: paid when transaction in month) |
 | Dashboard: cumulative balance, month balance, due periodic expenses | pytest | tests/unit/test_services_dashboard.py (get_cumulative_balance*, get_month_balance*, get_due_periodic_expenses*); tests/integration/test_dashboard_api.py |
 | Bulk transactions: normalized-ID batch, ownership check, all-or-nothing | pytest | tests/unit/test_services_transaction.py (test_bulk_create_transactions_*), tests/integration/test_transactions_api.py (test_bulk_create_transactions_*) |
-| Import/export: import preview vs existing pairs; export date-filtered CSV | pytest | tests/unit/test_services_transaction_manager.py (test_preview_import_*, test_export_transactions_csv_*); tests/integration/test_transaction_manager_api.py |
+| Import/export: import preview vs existing pairs; export date-filtered CSV (dd/mm/yyyy, `$` column, category/subcategory names, etc.) | pytest | tests/unit/test_services_transaction_manager.py (test_preview_import_*, test_export_transactions_csv_*); tests/integration/test_transaction_manager_api.py |
 
 ### 1.4 Out of Scope (current)
 
@@ -325,6 +325,8 @@ For list filtering by name (categories/subcategories/hangouts), use optional **`
 | POST | `/transaction-manager/import` | body: TransactionImportRequest | 200: TransactionImportPreview | 401, 404, 422 |
 | GET | `/transaction-manager/export` | query: year?, month?, day?, subcategory_id?, hangout_id? | 200: text/csv | 401, 422 |
 
+**CSV export (`GET /transaction-manager/export`)**: Response body is CSV with a header row, then one row per matching transaction in **ascending date order** (oldest first). Columns in order: **date** (`dd/mm/yyyy`), **`$`** (literal USD symbol in every data row; amounts stay in **value**), **value** (integer), **category_name**, **subcategory_name**, **description**, **hangout_name** (empty when no hangout). User-scoped; same optional filters as the transactions list.
+
 #### Pagination envelope (categories/subcategories/hangouts/transactions list)
 
 List endpoints for `GET /categories/`, `GET /subcategories/`, `GET /hangouts/`, and `GET /transactions/` return a pagination envelope instead of a raw array.
@@ -453,6 +455,7 @@ These fields let the frontend enable “next page” without deriving it from `t
 | 17 Name filters + pagination envelope | §1.3, §4.3 — `name` icontains; `PaginatedRead` for categories/subcategories/hangouts lists |
 | 18 Pagination convenience fields | §1.3, §4.3 — `has_more`, `next_skip` on `PaginatedRead` for those three list endpoints |
 | 19 Transactions list pagination | §1.3, §4.3 — `PaginatedRead` for `GET /transactions/` (same envelope as other lists) |
+| 20 Transaction CSV export format | §1.3, §4.3 — export column layout (dd/mm/yyyy, `$`, category/subcategory names, hangout name) |
 
 (Actual phases come from `.planning/phase-00-ROADMAP.md` generated at bootstrap.)
 
@@ -480,6 +483,7 @@ These fields let the frontend enable “next page” without deriving it from `t
 
 | Date | Change |
 |------|--------|
+| 2026-04-11 | Phase 20: transaction CSV export format — `dd/mm/yyyy`, fixed `$` column, category_name, subcategory_name, description, hangout_name; §1.2–1.3, §4.3, §8.1, test mapping. |
 | 2026-03-24 | Phase 19 complete: `GET /transactions/` returns `PaginatedRead[TransactionRead]` like other list endpoints; §1.3, §4.3, §8.1, mapping, ROADMAP, planning SPEC/SUMMARY. |
 | 2026-03-19 | Phase 18 complete: `PaginatedRead` adds `has_more` and `next_skip` for categories, subcategories, hangouts list APIs; §1.3 and §8.1 mapping updated. |
 | 2026-03-19 | Phase 17 complete: optional `name` (icontains) on categories, subcategories, hangouts list endpoints; those three lists return pagination envelope (`items`, `total`, `skip`, `limit`); transactions list unchanged; §1.3 mapping updated. |
