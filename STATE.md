@@ -2,15 +2,15 @@
 
 ## Current Phase
 
-Phase 20 — Transaction CSV export format (in progress)
+Phase 20 — Transaction CSV export format (complete)
 
 ## Last Task Completed
 
-Phase 19: `GET /transactions/` returns `PaginatedRead[TransactionRead]` (same envelope as other list APIs); service count + `paginated_read`; tests, Robot smoke, OpenAPI contract, TECHSPEC §1.3 / §4.3 / §8.1 / changelog; ROADMAP row; `phase-19-SPEC.md` / `phase-19-SUMMARY.md`.
+Phase 20: `GET /transaction-manager/export` CSV uses `dd/mm/yyyy`, fixed `$` column, value, category_name, subcategory_name, description, hangout_name; nested joinedload for category; unit and integration tests; TECHSPEC/ROADMAP/STATE/SPEC/SUMMARY on branch merged to `main`.
 
 ## Next Task
 
-Implement Phase 20: branch `feature/phase-20-csv-export-format`, commit `phase-20-SPEC.md`, then update `export_transactions_csv` and tests; SUMMARY, merge to `main`.
+Next backlog item or Phase 21 when defined on ROADMAP.
 
 ## Key Decisions
 
@@ -22,6 +22,7 @@ Implement Phase 20: branch `feature/phase-20-csv-export-format`, commit `phase-2
 - Import resolves existing category + subcategory pairs only and returns a normalized payload for strict bulk transaction creation.
 - Phase 17: list `name` filter uses `ILIKE '%value%'`; `name` query omitted means no name filter.
 - Phase 19: `GET /transactions/` uses the same `PaginatedRead` envelope as categories/subcategories/hangouts (`items`, `total`, `skip`, `limit`, `has_more`, `next_skip`).
+- Phase 20: CSV export uses European date and fixed `$` column; category name from subcategory’s parent category.
 
 ## Blockers
 
