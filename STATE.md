@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 19 — Transactions list pagination (complete)
+Phase 20 — Transaction CSV export format (in progress)
 
 ## Last Task Completed
 
@@ -10,7 +10,7 @@ Phase 19: `GET /transactions/` returns `PaginatedRead[TransactionRead]` (same en
 
 ## Next Task
 
-Next backlog item or Phase 20 when defined on ROADMAP.
+Implement Phase 20: branch `feature/phase-20-csv-export-format`, commit `phase-20-SPEC.md`, then update `export_transactions_csv` and tests; SUMMARY, merge to `main`.
 
 ## Key Decisions
 
