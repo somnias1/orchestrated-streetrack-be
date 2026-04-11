@@ -4,6 +4,8 @@ Unit tests for transaction_manager service. §1.3: import preview vs existing pa
 
 from __future__ import annotations
 
+import csv
+import io
 import uuid
 from datetime import date
 
@@ -175,7 +177,16 @@ def test_export_transactions_csv_empty(db_session: Session) -> None:
     csv_str = tm_service.export_transactions_csv(db_session, "user-1")
     lines = csv_str.strip().split("\n")
     assert len(lines) >= 1
-    assert "date" in lines[0] and "subcategory_id" in lines[0]
+    header = next(csv.reader(io.StringIO(lines[0])))
+    assert header == [
+        "date",
+        "$",
+        "value",
+        "category_name",
+        "subcategory_name",
+        "description",
+        "hangout_name",
+    ]
 
 
 def test_export_transactions_csv_oldest_first(db_session: Session) -> None:
@@ -200,12 +211,16 @@ def test_export_transactions_csv_oldest_first(db_session: Session) -> None:
             ),
         )
     csv_str = tm_service.export_transactions_csv(db_session, "user-1")
-    lines = csv_str.strip().split("\n")
-    assert len(lines) == 4  # header + 3 rows
-    # Order: First (3/1), Second (3/2), Third (3/3)
-    assert "First" in lines[1]
-    assert "Second" in lines[2]
-    assert "Third" in lines[3]
+    rows = list(csv.reader(io.StringIO(csv_str.strip())))
+    assert len(rows) == 4  # header + 3 rows
+    assert rows[0][0] == "date" and rows[0][1] == "$"
+    # Order: First (3/1), Second (3/2), Third (3/3); dates dd/mm/yyyy
+    assert rows[1][:5] == ["01/03/2025", "$", "-1", "C", "S"]
+    assert rows[1][5] == "First"
+    assert rows[2][:5] == ["02/03/2025", "$", "-1", "C", "S"]
+    assert rows[2][5] == "Second"
+    assert rows[3][:5] == ["03/03/2025", "$", "-1", "C", "S"]
+    assert rows[3][5] == "Third"
 
 
 def test_export_transactions_csv_filtered_by_year(db_session: Session) -> None:
@@ -235,6 +250,8 @@ def test_export_transactions_csv_filtered_by_year(db_session: Session) -> None:
         ),
     )
     csv_str = tm_service.export_transactions_csv(db_session, "user-1", year=2025)
-    lines = csv_str.strip().split("\n")
-    assert len(lines) == 2  # header + 1 row
-    assert "2025" in lines[1]
+    rows = list(csv.reader(io.StringIO(csv_str.strip())))
+    assert len(rows) == 2  # header + 1 row
+    assert rows[1][0] == "01/06/2025"
+    assert rows[1][2] == "-2"
+    assert rows[1][5] == "2025"

@@ -1,4 +1,4 @@
-"""Transaction manager: import preview and CSV export. TECHSPEC §4.3, Phase 15."""
+"""Transaction manager: import preview and CSV export. TECHSPEC §4.3, Phases 15 & 20."""
 
 from __future__ import annotations
 
@@ -93,7 +93,7 @@ def export_transactions_csv(
         select(Transaction)
         .where(Transaction.user_id == user_id)
         .options(
-            joinedload(Transaction.subcategory),
+            joinedload(Transaction.subcategory).joinedload(Subcategory.category),
             joinedload(Transaction.hangout),
         )
     )
@@ -115,23 +115,28 @@ def export_transactions_csv(
     writer.writerow(
         [
             "date",
-            "subcategory_id",
-            "subcategory_name",
+            "$",
             "value",
+            "category_name",
+            "subcategory_name",
             "description",
-            "hangout_id",
             "hangout_name",
         ]
     )
     for r in rows:
+        category_name = (
+            r.subcategory.category.name
+            if r.subcategory is not None and r.subcategory.category is not None
+            else ""
+        )
         writer.writerow(
             [
-                r.date.isoformat(),
-                str(r.subcategory_id),
-                r.subcategory.name if r.subcategory else "",
+                r.date.strftime("%d/%m/%Y"),
+                "$",
                 r.value,
+                category_name,
+                r.subcategory.name if r.subcategory else "",
                 r.description,
-                str(r.hangout_id) if r.hangout_id else "",
                 r.hangout.name if r.hangout else "",
             ]
         )
